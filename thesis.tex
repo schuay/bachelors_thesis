@@ -1,0 +1,144 @@
+%%
+%%  Project:        Dissertation
+%%  File:           $RCSfile$
+%%  Version:        $Revision$
+%%  Creation date:  Mon March 27, 2000
+%%  Last changes:   $Date$
+%%  Author:         $Author$
+%%                  bauer@vmars.tuwien.ac.at
+%%  Contents:       Main LaTeX File
+%%
+%%  FileID:         $Id$
+%%
+
+\documentclass[12pt,a4paper,oneside]{scrreprt}
+
+\usepackage{graphicx}          %includegraphics-command
+\usepackage{fancyheadings}
+\usepackage{url}
+\usepackage[english,germanb]{babel}
+\usepackage[latin1]{inputenc}  %support direct writing of German Umlauts
+\usepackage{dcolumn}           %decimal column formatting
+
+\newcolumntype{d}[1]{D{.}{.}{#1}}              % decimal formatting in tables
+\newcolumntype{C}[1]{@{}>{\centering}p{#1}@{}} % centered columns with fixed width: C{width}
+
+\usepackage{mybakktitlepage}
+
+%%
+%% ---------------------------------------------------------------------
+%%
+
+\sloppy
+
+\oddsidemargin 1cm \evensidemargin 1cm \topmargin 0pt
+
+\headsep 50pt \textheight 21.4cm \textwidth 14.1cm
+\setlength{\parskip}{5pt plus2pt minus2pt}
+
+\renewcommand{\floatpagefraction}{0.9}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{1.0}
+\renewcommand{\bottomfraction}{1.0}
+
+\setcounter{totalnumber}{5}
+\setcounter{bottomnumber}{5}
+\setcounter{topnumber}{5}
+
+\setcounter{tocdepth}{2}
+\addtolength{\abovecaptionskip}{-10pt}
+
+\newcommand{\eg}{e.\,g., }
+\newcommand{\ie}{i.\,e., }
+\def\lqq{\lq\lq}
+\def\rqq{\rq\rq}
+\def\dq#1{\lqq #1\rqq}
+\def\dqit#1{\lqq \emph{#1}\rqq}
+
+%%
+%% ---------------------------------------------------------------------
+%%
+
+\input{acronyms.tex}
+
+%%
+%% ---------------------------------------------------------------------
+%%
+
+\begin{document}
+
+    \pagestyle{empty}
+    \input{title.tex}
+    \maketitle
+    \cleardoublepage
+
+    \pagestyle{plain}
+    \pagenumbering{roman}
+    \setlength{\parskip}{5pt plus2pt minus2pt}
+
+    \setcounter{page}{1}
+
+%% if thesis is in English language use the following paragraph:
+%%
+    \selectlanguage{english}
+    \include{abstract}
+    \cleardoublepage
+%%
+
+%% if thesis is in German language use the following paragraph:
+%
+%    \selectlanguage{german}
+%    \include{kurzfassung}
+%    \cleardoublepage
+%
+%%
+    \setlength{\parskip}{1mm}
+    \linespread{0.0}
+
+    \tableofcontents
+%    \listoffigures
+%    \listoftables
+    \linespread{1}
+    \clearpage
+    \cleardoublepage
+    \setlength{\parskip}{5pt plus2pt minus2pt}
+
+    \pagestyle{fancy}
+    \renewcommand{\chaptermark}[1]{\markboth{\thechapter\ #1}{}}
+    \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}{}}
+    \addtolength{\headheight}{2pt}
+
+    \pagenumbering{arabic}
+    \setcounter{page} {1}
+    \cleardoublepage
+    \include{introduction}
+    \cleardoublepage
+    \include{concepts}
+    \cleardoublepage
+    \include{relatedwork}
+    \cleardoublepage
+    \include{designapproach}
+    \cleardoublepage
+    \include{implementation}
+    \cleardoublepage
+    \include{results}
+    \cleardoublepage
+    \include{conclusion}
+    \cleardoublepage
+
+    \appendix
+    \cleardoublepage
+    \addcontentsline{toc}{chapter}{Bibliography}
+    \bibliography{bibfile}
+    \bibliographystyle{alpha}
+
+    \include{setupguide}
+    \cleardoublepage
+    \include{userguide}
+    \cleardoublepage
+
+\end{document}
+
+%%
+%% = eof =====================================================================
+%%

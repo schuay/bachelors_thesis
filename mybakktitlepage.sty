@@ -1,0 +1,91 @@
+% titlepage.sty 19.09.97
+%
+% only tested with [a4] option
+%
+% modified for dissertation by Christian Ebner
+%
+%
+% added Matrikelnummer (see "Hinweise f. d. Abfassung der 1. Seite d. Diss.")
+% date should be only month + year
+\def\thesis#1{\gdef\@thesis{#1}}
+\def\author#1{\gdef\@author{#1}}
+\def\advisorname#1{\gdef\@advisorname{#1}}
+\def\institut#1{\gdef\@institut{#1}}
+\def\instnummer#1{\gdef\@instnummer{#1}}
+\def\matrikel#1{\gdef\@matrikel{#1}}
+\def\address#1{\gdef\@address{#1}}
+\def\geburtstag#1{\gdef\@geburtstag{#1}}
+\def\geburtsort#1{\gdef\@geburtsort{#1}}
+%
+\setcounter{footnote}{0} \let\thanks\relax
+\gdef\@thanks{}                                         % Default: empty
+\gdef\@thesis{BAKKALAUREATSARBEIT}                             % Default !!
+\gdef\@advisorname{Univ.Ass. Dipl.-Ing. Dr.techn. Wilfried Elmenreich}
+\gdef\@institut{Institut f{\"u}r Technische Informatik}
+\gdef\@instnummer{182}
+% \gdef\@author{}\gdef\@title{}
+% \gdef\@geburtstag{}\gdef\@geburtsort{}\gdef\@address{}  % MUST be present
+% \gdef\@matrikel{}
+\let\maketitle\relax
+%
+\def\maketitle{\begin{titlepage}
+\let\footnotesize\small \let\footnoterule\relax \setcounter{page}{1}
+\null
+\vfil
+\large
+\begin{center}
+{\sc \@thesis \par} \vskip 1cm
+{\LARGE\bf \@title \par} \vskip 3em
+ausgef\"{u}hrt zum Zwecke der Erlangung des akademischen Grades\\
+eines Bakkalaureus der Technischen Informatik \par
+\vskip 1cm
+unter der Leitung von\par
+\vfill
+\begin{tabular}[t]{c} \@advisorname
+\end{tabular}\par
+\@institut~\@instnummer\par 
+\vfill durchgef\"{u}hrt von \par \vfill
+\begin{tabular}[t]{c} \@author
+\end{tabular}\par
+Matr.-Nr. \@matrikel \par \@address \par
+\end{center} \par
+\vskip 1cm
+\vfill
+Wien, im \@date\hfill{\makebox[6cm]{\dotfill}}
+% \@thanks  -- we don't want anything extra cluttering the title page
+\vfil
+\null
+\end{titlepage}
+\setcounter{footnote}{0} \let\thanks\relax
+\gdef\@thanks{}\gdef\@author{}
+% \gdef\@title{} -- we'll need title later, in the abstracts.
+\gdef\@geburtstag{}\gdef\@geburtsort{}\gdef\@matrikel{}
+\gdef\@address{}\gdef\@thesis{}\let\maketitle\relax}
+% (English) Abstract
+\def\englabstractname{Abstract}
+\def\abstract{% \titlepage -- don't want page number reset and hidden.
+              % \newpage is done by preceding \endtitlepage (works therefore
+              % only with onecolumn !!
+\null\vfil
+\begin{center}
+{\LARGE\bf \@title \par} \vskip 4em
+{\large\bf \englabstractname}
+\end{center} \par}
+\def\endabstract{\par\vfil\null\endtitlepage}
+% (Deutsche) Kurzfassung
+\def\kurzfassungname{Kurzfassung}
+\def\kurzfassung{% \titlepage -- see comment above.
+\null\vfil
+\begin{center}
+{\LARGE\bf \@title \par} \vskip 4em
+{\large\bf \kurzfassungname}
+\end{center} \par}
+\let\endkurzfassung\endabstract
+% (Deutsche) Danksagung
+\def\dankname{Danksagung}
+\def\dank{% \titlepage -- see comment above.
+\null\vfil
+\begin{center}
+{\large\bf \dankname}
+\end{center} \par}
+\let\enddank\endabstract
