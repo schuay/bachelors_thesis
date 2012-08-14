@@ -24,7 +24,9 @@ git clone git://github.com/buserror-uk/simavr.git
 
 \subsection{Software Dependencies}
 
-\emph{elfutils} is the only hard dependency at run-time.
+\emph{elfutils} is the only hard dependency at run-time. The name of this
+package may differ from distro to distro. For example, in Ubuntu it is called
+\emph{libelfg0}. % TODO confirm this.
 
 At compile-time, simavr additionally requires \emph{avr-libc} to complete its
 built-in AVR core definitions. It is assumed that further standard
@@ -34,13 +36,18 @@ already present.
 simavr has been tested with the following software versions:
 
 \begin{itemize}
+\item Arch Linux x86\_64 and i686
 \item elfutils 0.154
 \item avr-libc 1.8.0
 \item gcc 4.7.1
 \item make 3.82
 \end{itemize}
 
-\subsection{Compilation}
+Furthermore, the board\_usb example depends on libusb\_vhci and vhci\_hcd. For
+further details, see \emph{examples/board\_usb/README}. Note however that these
+are not required for a fully working simavr build.
+
+\subsection{Compilation and Installation}
 
 simavr's build system relies on standard makefiles. The simplest compilation
 boils down to the usual
@@ -78,7 +85,16 @@ These variables may be set either directly in Makefile.common, or alternatively
 can be passed to the make invocation (make AVR\_ROOT=/usr/avr DESTDIR=/usr
 install).
 
-For development, we built simavr with the following procedure:
+Installation is managed through the usual
+\begin{verbatim}
+make install                                           
+\end{verbatim}
+
+The DESTDIR variable can be used to create a simavr package. DESTDIR=/dest/dir
+installs to /dest/dir but keeps the package configured to the standard prefix
+(/usr).
+
+For development, we built and installed simavr with the following procedure:
 
 \begin{verbatim}
 make clean
@@ -86,7 +102,6 @@ make AVR_ROOT=/usr/avr CFLAGS="-O0 -Wall -Wextra -g -fPIC -std=gnu99 \
   -Wno-sign-compare -Wno-unused-parameter"
 make DESTDIR="/usr" install
 \end{verbatim}
-
 
 %%
 %% = eof =====================================================================
