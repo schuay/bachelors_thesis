@@ -103,6 +103,54 @@ make AVR_ROOT=/usr/avr CFLAGS="-O0 -Wall -Wextra -g -fPIC -std=gnu99 \
 make DESTDIR="/usr" install
 \end{verbatim}
 
+\section{qsimavr}
+
+\subsection{Getting the source code}
+
+The qsimavr source code is available from
+\url{git://github.com/schuay/qsimavr.git}, with the homepage located at
+\url{https://www.github.com/schuay/qsimavr}. Clone it using
+
+\begin{verbatim}
+git clone git://github.com/schuay/qsimavr.git
+\end{verbatim}
+
+\subsection{Software Dependencies}
+
+Since qsimavr depends on simavr, it shares all of its dependencies. The only
+additional requirements are \emph{qt} and \emph{cmake}.
+
+qsimavr has been tested with
+
+\begin{itemize}
+\item Arch Linux x86\_64 and i686
+\item qt 4.8.2
+\item cmake 2.8.9
+\end{itemize}
+
+\subsection{Compilation and Installation}
+
+qsimavr follows standard cmake procedure and supports out-of-tree builds. To
+generate makefiles, run
+
+\begin{verbatim}
+cmake /path/to/qsimavr/source
+\end{verbatim}
+
+To switch to a debug build, add -DCMAKE\_BUILD\_TYPE="Debug" to the cmake
+invocation. Installation paths can be customized using -DCMAKE\_INSTALL\_PREFIX.
+See the cmake documentation for further information.
+
+The rest of the compilation and installation process consists of running
+
+\begin{verbatim}
+make
+make install
+\end{verbatim}
+
+As usual, DESTDIR may be used for packaging. Other standard make variables also
+apply.
+
 %%
 %% = eof =====================================================================
 %%
