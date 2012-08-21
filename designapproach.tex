@@ -93,35 +93,26 @@ Similar macros exist for other important AVR parts such as the ADC, IO ports,
 timers, etc.
 
 \begin{lstlisting}
-    // even if not setup at startup, activate gdb if crashing
     avr->gdb_port = 1234;
-    if (0) {
-        //avr->state = cpu_Stopped;
-        avr_gdb_init(avr);
-    }
+    avr->state = cpu_Stopped;
+    avr_gdb_init(avr);
 \end{lstlisting}
 
-
+This section sets up simavr's gdb infrastructure to listen on port 1234. The
+CPU is stopped to allow gdb to attach before execution begins.
 
 \begin{lstlisting}
-
-    /*
-     *  VCD file initialization
-     *
-     *  This will allow you to create a "wave" file and display it in gtkwave
-     *  Pressing "r" and "s" during the demo will start and stop recording
-     *  the pin changes
-     */
-//  avr_vcd_init(avr, "gtkwave_output.vcd", &vcd_file, 100000 /* usec */);
-//  avr_vcd_add_signal(&vcd_file,
-//      avr_io_getirq(avr, AVR_IOCTL_TWI_GETIRQ(0), TWI_IRQ_STATUS), 8 /* bits
-*/ ,
-//      "TWSR" );
-
-    printf( "\nDemo launching:\n");
+    avr_vcd_init(avr, "gtkwave_output.vcd", &vcd_file, 100000 /* usec */);
+    avr_vcd_add_signal(
+        &vcd_file,
+        avr_io_getirq(avr, AVR_IOCTL_TWI_GETIRQ(0), TWI_IRQ_STATUS),
+        8 /* bits */,
+        "TWSR");
 \end{lstlisting}
 
-
+Next, a value change dump output is configured to track changes to the
+TWI\_IRQ\_STATUS IRQ. The file may then be viewed using the \emph{gtkwave}
+application.
 
 \begin{lstlisting}
     int state = cpu_Running;
@@ -132,6 +123,91 @@ timers, etc.
 }
 \end{lstlisting}
 
+Finally, we have reached the simple main loop. Each iteration executes one
+instruction, handles any pending interrupts and cycle timers, and sleeps if
+possible. As soon as execution completes or crashes, simulation stops and we
+exit the program.
+
+We will now examine the relevant parts of the i2c\_eeprom implementation.
+Details have been omitted and only communication with the avr\_t instance are
+shown.
+
+\begin{lstlisting}
+static const char * _ee_irq_names[2] = {
+		[TWI_IRQ_MISO] = "8>eeprom.out",
+		[TWI_IRQ_MOSI] = "32<eeprom.in",
+};
+
+void
+i2c_eeprom_init(
+		struct avr_t * avr,
+		i2c_eeprom_t * p,
+		uint8_t addr,
+		uint8_t mask,
+		uint8_t * data,
+		size_t size)
+{
+
+    /* [...] */
+
+	p->irq = avr_alloc_irq(&avr->irq_pool, 0, 2, _ee_irq_names);
+	avr_irq_register_notify(p->irq + TWI_IRQ_MOSI, i2c_eeprom_in_hook, p);
+
+    /* [...] */
+}
+\end{lstlisting}
+
+First, the EEPROM allocates its own private IRQs. The EEPROM implementation
+does not know or care to which simavr IRQ's they will be attached. It then
+attaches a callback function (i2c\_eeprom\_in\_hook) to the MOSI IRQ. This
+function will be called whenever a value is written to the IRQ. The pointer to
+the EEPROM state p is passed to each of these callback function calls.
+
+\begin{lstlisting}
+void
+i2c_eeprom_attach(
+		struct avr_t * avr,
+		i2c_eeprom_t * p,
+		uint32_t i2c_irq_base )
+{
+	avr_connect_irq(
+		p->irq + TWI_IRQ_MISO,
+		avr_io_getirq(avr, i2c_irq_base, TWI_IRQ_MISO));
+	avr_connect_irq(
+		avr_io_getirq(avr, i2c_irq_base, TWI_IRQ_MOSI),
+		p->irq + TWI_IRQ_MOSI );
+}
+\end{lstlisting}
+
+The private IRQs are then attached to simavr's internal IRQs. This is called
+chaining - all messages raised are forwarded to all chained IRQs.
+
+\begin{lstlisting}
+static void
+i2c_eeprom_in_hook(
+		struct avr_irq_t * irq,
+		uint32_t value,
+		void * param)
+{
+	i2c_eeprom_t * p = (i2c_eeprom_t*)param;
+
+    /* [...] */
+
+    avr_raise_irq(p->irq + TWI_IRQ_MISO,
+            avr_twi_irq_msg(TWI_COND_ACK, p->selected, 1));
+
+    /* [...] */
+}
+\end{lstlisting}
+
+Finally, we've reached the IRQ callback function. It is responsible for
+simulating communications between simavr (acting as the TWI master) and the
+EEPROM (as the TWI slave). The EEPROM state which was previously passed to
+avr\_irq\_register\_notify is contained in the param variable and cast back to
+an i2c\_eeprom\_t pointer for further use.
+
+Outgoing messages are sent by raising the internal IRQ. This message is then
+forwarded to all chained IRQs.
 
 \subsection{Main Loop}
 \subsection{avr\_t Initialization}
