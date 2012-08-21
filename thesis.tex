@@ -19,6 +19,28 @@
 \usepackage[english,germanb]{babel}
 \usepackage[latin1]{inputenc}  %support direct writing of German Umlauts
 \usepackage{dcolumn}           %decimal column formatting
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{listings}
+
+\definecolor{Brown}{cmyk}{0,0.81,1,0.60}
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+\definecolor{gray}{gray}{0.5}
+
+\lstset{
+    language=C,                             % Code langugage
+    basicstyle=\ttfamily,                   % Code font, Examples:
+                                            % \footnotesize, \ttfamily
+    keywordstyle=\color{OliveGreen},        % Keywords font ('*' = uppercase)
+    commentstyle=\color{gray},              % Comments font
+    captionpos=b,                           % Caption-position = bottom
+    breaklines=true,                        % Automatic line breaking?
+    breakatwhitespace=false,                % Automatic breaks only at
+                                            % whitespace?
+    showspaces=false,                       % Dont make spaces visible
+    showtabs=false,                         % Dont make tabs visible
+    morekeywords={__attribute__},           % Specific keywords
+}
 
 \newcolumntype{d}[1]{D{.}{.}{#1}}              % decimal formatting in tables
 \newcolumntype{C}[1]{@{}>{\centering}p{#1}@{}} % centered columns with fixed width: C{width}
