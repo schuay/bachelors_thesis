@@ -13,7 +13,126 @@ we will examine how qsimavr uses and expands upon simavr.
 
 \section{simavr}
 
-\subsection{A Short Example Program}
+simavr is a small cross-platform AVR simulator written with simplicity and
+hackability in mind. It is supported on Linux and OS X, but should run on any
+platform with avr-libc support.
+
+In the following sections, we will take a tour through simavr internals.
+Without further delay, let's jump right in and walk through a short demo.
+
+\subsection{simavr Example Walkthrough}
+
+The following program is taken from the board\_i2ctest simavr example. Minor
+modifications have been made to focus on the essential section. Error handling
+is mostly omitted in favor of readability.
+
+\begin{lstlisting}
+#include <stdlib.h>
+#include <stdio.h>
+#include <libgen.h>
+#include <pthread.h>
+
+#include "sim_avr.h"
+#include "avr_twi.h"
+#include "sim_elf.h"
+#include "sim_gdb.h"
+#include "sim_vcd_file.h"
+#include "i2c_eeprom.h"
+\end{lstlisting}
+
+The actual simulation of the external EEPROM component is located in
+i2c\_eeprom.h. We will take a look at the implementation later on.
+
+\begin{lstlisting}
+avr_t * avr = NULL;
+avr_vcd_t vcd_file;
+
+i2c_eeprom_t ee;
+\end{lstlisting}
+
+avr is the main data structure. It encapsulates the entire state of the
+core simulation, including register, SRAM and flash contents, the CPU state, the
+current cycle count, callbacks for various tasks, pending interrupts, and more.
+
+vcd\_file represents the file target for the \emph{value change dump} module. It
+is used to dump the level changes of desired pins (or IRQ's in general) into a
+file which can be subsequently viewed using utilities such as \emph{gtkwave}.
+
+ee contains the internal state of the simulated external EEPROM.
+
+\begin{lstlisting}
+int main(int argc, char *argv[])
+{
+    elf_firmware_t f;
+    elf_read_firmware("atmega1280_i2ctest.axf", &f);
+\end{lstlisting}
+
+The firmware is loaded from the specified file. Note that exactly the same file
+can be executed on the AVR hardware without changes. MMCU and frequency
+information have been embedded into the binary and are therefore available in
+elf\_firmware\_t.
+
+\begin{lstlisting}
+    avr = avr_make_mcu_by_name(f.mmcu);
+    avr_init(avr);
+    avr_load_firmware(avr, &f);
+\end{lstlisting}
+
+The avr\_t instance is then constructed from the core file of the specified
+MMCU, and initialized. The firmware is then copied into the program memory.
+
+\begin{lstlisting}
+    i2c_eeprom_init(avr, &ee, 0xa0, 0xfe, NULL, 1024);
+    i2c_eeprom_attach(avr, &ee, AVR_IOCTL_TWI_GETIRQ(0));
+\end{lstlisting}
+
+AVR\_IOCTL\_TWI\_GETIRQ is a macro to retrieve the internal IRQ of the TWI
+simulation. IRQ's are the main method of communication between simavr and
+external components and are also used liberally throughout simavr internals.
+Similar macros exist for other important AVR parts such as the ADC, IO ports,
+timers, etc.
+
+\begin{lstlisting}
+    // even if not setup at startup, activate gdb if crashing
+    avr->gdb_port = 1234;
+    if (0) {
+        //avr->state = cpu_Stopped;
+        avr_gdb_init(avr);
+    }
+\end{lstlisting}
+
+
+
+\begin{lstlisting}
+
+    /*
+     *  VCD file initialization
+     *
+     *  This will allow you to create a "wave" file and display it in gtkwave
+     *  Pressing "r" and "s" during the demo will start and stop recording
+     *  the pin changes
+     */
+//  avr_vcd_init(avr, "gtkwave_output.vcd", &vcd_file, 100000 /* usec */);
+//  avr_vcd_add_signal(&vcd_file,
+//      avr_io_getirq(avr, AVR_IOCTL_TWI_GETIRQ(0), TWI_IRQ_STATUS), 8 /* bits
+*/ ,
+//      "TWSR" );
+
+    printf( "\nDemo launching:\n");
+\end{lstlisting}
+
+
+
+\begin{lstlisting}
+    int state = cpu_Running;
+    while ((state != cpu_Done) && (state != cpu_Crashed))
+        state = avr_run(avr);
+
+    return 0;
+}
+\end{lstlisting}
+
+
 \subsection{Main Loop}
 \subsection{avr\_t Initialization}
 \subsection{Instruction Processing}
