@@ -98,8 +98,8 @@ For development, we built and installed simavr with the following procedure:
 
 \begin{verbatim}
 make clean
-make AVR_ROOT=/usr/avr CFLAGS="-O0 -Wall -Wextra -g -fPIC -std=gnu99 \
-  -Wno-sign-compare -Wno-unused-parameter"
+make AVR_ROOT=/usr/avr CFLAGS="-O0 -Wall -Wextra -g -fPIC \
+  -std=gnu99 -Wno-sign-compare -Wno-unused-parameter"
 make DESTDIR="/usr" install
 \end{verbatim}
 
