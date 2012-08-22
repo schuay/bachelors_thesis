@@ -210,6 +210,15 @@ Outgoing messages are sent by raising the internal IRQ. This message is then
 forwarded to all chained IRQs.
 
 \subsection{Main Loop}
+
+We will now take a closer look at the main loop implementation. Each call to
+avr\_run triggers the function stored in the run member of the avr\_t structure
+(avr->run). The two standard implementations are avr\_callback\_run\_raw and
+avr\_callback\_run\_gdb, located in sim\_avr.c. The essence of both function is
+identical, but avr\_callback\_run\_gdb contains additional logic for gdb
+handling (network protocol, stepping).
+
+
 \subsection{avr\_t Initialization}
 \subsection{Instruction Processing}
 \subsection{Interrupts}
