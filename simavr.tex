@@ -213,7 +213,7 @@ forwarded to all chained \ac{IRQ}s.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Main Loop}
+\section{Main Loop} \label{Main Loop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We will now take a closer look at the main loop implementation. Each call to
@@ -568,9 +568,8 @@ raising and servicing, and whenever interrupts are enabled
 (and previously disabled).
 
 \lstinline|pending| along with \lstinline|pending_w| and \lstinline|pending_r|
-represents the \ac{FIFO} queue of pending interrupts. Note that the \ac{FIFO}
-queue deviates from the actual priority-based interrupt behavior of \ac{AVR}
-interrupts.
+represents a ringbuffer of pending interrupts. Note that servicing an
+interrupt removes the one with the highest priority.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -582,7 +581,35 @@ set, \lstinline|vector| is added to the \lstinline|pending| \ac{FIFO} of
 \lstinline|avr->interrupts|, and a non-zero \lstinline|pending_wait| time is
 ensured. If the \ac{CPU} is currently sleeping, it is woken up.
 
+As we've already covered in section \ref{Main Loop}, servicing interrupts is
+only attempted if the \ac{CPU} is either running or sleeping. Additionally,
+interrupts must be enabled globally in \ac{SREG}, and \lstinline|pending_wait|
+(which is decremented on each \lstinline|avr_service_interrupts| call) must have
+reached zero. The next pending vector with highest priority is then removed from
+the pending ringbuffer and serviced as follows:
 
+\begin{lstlisting}
+if (!avr_regbit_get(avr, vector->enable) || !vector->pending) {
+    vector->pending = 0;
+\end{lstlisting}
+
+If the specific interrupt is masked or has been cleared, no action occurs.
+
+\begin{lstlisting}
+} else {
+    _avr_push16(avr, avr->pc >> 1);
+    avr->sreg[S_I] = 0;
+    avr->pc = vector->vector * avr->vector_size;
+    avr_clear_interrupt(avr, vector);
+}
+\end{lstlisting}
+
+Otherwise, the current program counter is pushed onto the stack. This illustrates
+the difference between byte addresses (as used in \lstinline|avr->pc|) and
+word addresses (as expected by the \ac{AVR} processor).
+Interrupts are then disabled by clearing the I bit of the status register, and
+the program counter is set to the \ac{ISR} vector. Finally, if
+\lstinline|raise_sticky| is 0, the interrupt flag is cleared.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Cycle Timers}
