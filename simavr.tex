@@ -308,16 +308,25 @@ In this scenario, there is way of ever waking up. Therefore, execution is halted
 gracefully.
 
 \begin{lstlisting}
-    // Interrupt servicing might change the PC too, during 'sleep'
     if (avr->state == cpu_Running || avr->state == cpu_Sleeping)
         avr_service_interrupts(avr);
+\end{lstlisting}
 
-    // if we were stepping, use this state to inform remote gdb
+Finally, any immediately pending interrupts are handled. The highest priority
+interrupt (this depends solely on the interrupt vector address) is removed from
+the pending queue, interrupts are disabled in the status register, and the
+program counter is set to the interrupt vector.
+
+If the CPU is sleeping, interrupts can be raised by cycle timers.
+
+\begin{lstlisting}
     if (step)
         avr->state = cpu_StepDone;
 }
 \end{lstlisting}
 
+Wrapping up, if the current loop iteration was a GDB step, the state is set
+such that the next iteration will inform GDB and halt the CPU.
 
 \subsection{\lstinline|avr_t| Initialization}
 \subsection{Instruction Processing}
