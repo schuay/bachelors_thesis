@@ -11,7 +11,7 @@
 It is necessary to understand simavr's internals before going on to discuss
 qsimavr's design.
 
-simavr is a small cross-platform AVR simulator written with simplicity and
+simavr is a small cross-platform \ac{AVR} simulator written with simplicity and
 hackability in mind. It is supported on Linux and OS X, but should run on any
 platform with avr-libc support.
 
@@ -42,7 +42,7 @@ is mostly omitted in favor of readability.
 #include "i2c_eeprom.h"
 \end{lstlisting}
 
-The actual simulation of the external EEPROM component is located in
+The actual simulation of the external \ac{EEPROM} component is located in
 i2c\_eeprom.h. We will take a look at the implementation later on.
 
 \begin{lstlisting}
@@ -53,14 +53,14 @@ i2c_eeprom_t ee;
 \end{lstlisting}
 
 avr is the main data structure. It encapsulates the entire state of the
-core simulation, including register, SRAM and flash contents, the CPU state, the
+core simulation, including register, \ac{SRAM} and flash contents, the \ac{CPU} state, the
 current cycle count, callbacks for various tasks, pending interrupts, and more.
 
 \lstinline|vcd_file| represents the file target for the \emph{value change dump} module. It
-is used to dump the level changes of desired pins (or IRQ's in general) into a
+is used to dump the level changes of desired pins (or \ac{IRQ}'s in general) into a
 file which can be subsequently viewed using utilities such as \emph{gtkwave}.
 
-ee contains the internal state of the simulated external EEPROM.
+ee contains the internal state of the simulated external \ac{EEPROM}.
 
 \begin{lstlisting}
 int main(int argc, char *argv[])
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 \end{lstlisting}
 
 The firmware is loaded from the specified file. Note that exactly the same file
-can be executed on the AVR hardware without changes. MMCU and frequency
+can be executed on the \ac{AVR} hardware without changes. \ac{MCU} and frequency
 information have been embedded into the binary and are therefore available in
 \lstinline|elf_firmware_t|.
 
@@ -81,17 +81,17 @@ information have been embedded into the binary and are therefore available in
 \end{lstlisting}
 
 The \lstinline|avr_t| instance is then constructed from the core file of the specified
-MMCU, and initialized. The firmware is then copied into the program memory.
+\ac{MCU}, and initialized. The firmware is then copied into the program memory.
 
 \begin{lstlisting}
     i2c_eeprom_init(avr, &ee, 0xa0, 0xfe, NULL, 1024);
     i2c_eeprom_attach(avr, &ee, AVR_IOCTL_TWI_GETIRQ(0));
 \end{lstlisting}
 
-\lstinline|AVR_IOCTL_TWI_GETIRQ| is a macro to retrieve the internal IRQ of the TWI
-simulation. IRQ's are the main method of communication between simavr and
+\lstinline|AVR_IOCTL_TWI_GETIRQ| is a macro to retrieve the internal \ac{IRQ} of the \ac{TWI}
+simulation. \ac{IRQ}'s are the main method of communication between simavr and
 external components and are also used liberally throughout simavr internals.
-Similar macros exist for other important AVR parts such as the ADC, IO ports,
+Similar macros exist for other important \ac{AVR} parts such as the \ac{ADC}, \ac{IO} ports,
 timers, etc.
 
 \begin{lstlisting}
@@ -100,8 +100,8 @@ timers, etc.
     avr_gdb_init(avr);
 \end{lstlisting}
 
-This section sets up simavr's gdb infrastructure to listen on port 1234. The
-CPU is stopped to allow gdb to attach before execution begins.
+This section sets up simavr's \ac{GDB} infrastructure to listen on port 1234. The
+\ac{CPU} is stopped to allow \ac{GDB} to attach before execution begins.
 
 \begin{lstlisting}
     avr_vcd_init(avr, "gtkwave_output.vcd", &vcd_file, 100000 /* usec */);
@@ -113,7 +113,7 @@ CPU is stopped to allow gdb to attach before execution begins.
 \end{lstlisting}
 
 Next, a value change dump output is configured to track changes to the
-\lstinline|TWI_IRQ_STATUS| IRQ. The file may then be viewed using the \emph{gtkwave}
+\lstinline|TWI_IRQ_STATUS| \ac{IRQ}. The file may then be viewed using the \emph{gtkwave}
 application.
 
 \begin{lstlisting}
@@ -159,11 +159,11 @@ i2c_eeprom_init(
 }
 \end{lstlisting}
 
-First, the EEPROM allocates its own private IRQs. The EEPROM implementation
-does not know or care to which simavr IRQ's they will be attached. It then
-attaches a callback function (\lstinline|i2c_eeprom_in_hook|) to the MOSI IRQ. This
-function will be called whenever a value is written to the IRQ. The pointer to
-the EEPROM state p is passed to each of these callback function calls.
+First, the \ac{EEPROM} allocates its own private \ac{IRQ}s. The \ac{EEPROM} implementation
+does not know or care to which simavr \ac{IRQ}'s they will be attached. It then
+attaches a callback function (\lstinline|i2c_eeprom_in_hook|) to the MOSI \ac{IRQ}. This
+function will be called whenever a value is written to the \ac{IRQ}. The pointer to
+the \ac{EEPROM} state p is passed to each of these callback function calls.
 
 \begin{lstlisting}
 void
@@ -181,8 +181,8 @@ i2c_eeprom_attach(
 }
 \end{lstlisting}
 
-The private IRQs are then attached to simavr's internal IRQs. This is called
-chaining - all messages raised are forwarded to all chained IRQs.
+The private \ac{IRQ}s are then attached to simavr's internal \ac{IRQ}s. This is called
+chaining - all messages raised are forwarded to all chained \ac{IRQ}s.
 
 \begin{lstlisting}
 static void
@@ -202,14 +202,14 @@ i2c_eeprom_in_hook(
 }
 \end{lstlisting}
 
-Finally, we've reached the IRQ callback function. It is responsible for
-simulating communications between simavr (acting as the TWI master) and the
-EEPROM (as the TWI slave). The EEPROM state which was previously passed to
+Finally, we've reached the \ac{IRQ} callback function. It is responsible for
+simulating communications between simavr (acting as the \ac{TWI} master) and the
+\ac{EEPROM} (as the \ac{TWI} slave). The \ac{EEPROM} state which was previously passed to
 \lstinline|avr_irq_register_notify| is contained in the param variable and cast back to
 an \lstinline|i2c_eeprom_t| pointer for further use.
 
-Outgoing messages are sent by raising the internal IRQ. This message is then
-forwarded to all chained IRQs.
+Outgoing messages are sent by raising the internal \ac{IRQ}. This message is then
+forwarded to all chained \ac{IRQ}s.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -220,7 +220,7 @@ We will now take a closer look at the main loop implementation. Each call to
 \lstinline|avr_run| triggers the function stored in the run member of the \lstinline|avr_t| structure
 (\lstinline|avr->run|). The two standard implementations are \lstinline|avr_callback_run_raw| and
 \lstinline|avr_callback_run_gdb|, located in sim\_avr.c. The essence of both function is
-identical; since \lstinline|avr_callback_run_gdb| contains additional logic for GDB
+identical; since \lstinline|avr_callback_run_gdb| contains additional logic for \ac{GDB}
 handling (network protocol, stepping), we will examine it further and point out
 any differences to the the raw version. Several comments and irrelevant code
 sections have been removed.
@@ -238,12 +238,12 @@ void avr_callback_run_gdb(avr_t * avr)
         avr->state = cpu_Running;
 \end{lstlisting}
 
-This initial section is gdb specific. \lstinline|avr_gdb_processor| is responsible for
-handling GDB network communication. It also checks if execution has reached a
-breakpoint or the end of a step and stops the CPU if it did.
+This initial section is \ac{GDB} specific. \lstinline|avr_gdb_processor| is responsible for
+handling \ac{GDB} network communication. It also checks if execution has reached a
+breakpoint or the end of a step and stops the \ac{CPU} if it did.
 
-If GDB has transmitted a step command, we need to save the state during the
-main section of the loop (the CPU ``runs'' for one instruction) and restore to
+If \ac{GDB} has transmitted a step command, we need to save the state during the
+main section of the loop (the \ac{CPU} ``runs'' for one instruction) and restore to
 the ``StepDone'' state at on completion.
 
 \begin{lstlisting}
@@ -254,10 +254,10 @@ the ``StepDone'' state at on completion.
     }
 \end{lstlisting}
 
-We have now reached the actual execution of the current instruction. If the CPU
+We have now reached the actual execution of the current instruction. If the \ac{CPU}
 is currently running, \lstinline|avr_run_one| decodes the instruction located in flash memory
-(\lstinline|avr->flash|) and triggers all necessary actions. This can include setting the CPU
-state (SLEEP), updating the status register SREG, writing or reading from memory
+(\lstinline|avr->flash|) and triggers all necessary actions. This can include setting the \ac{CPU}
+state (SLEEP), updating the status register \ac{SREG}, writing or reading from memory
 locations, altering the program counter PC, etc \ldots
 
 Finally, the cycle counter (\lstinline|avr->cycle|) is updated and the new
@@ -299,16 +299,16 @@ hardcoded limit of 1000 cycles if none exist).
     }
 \end{lstlisting}
 
-If the CPU is currently sleeping, the time spent is simulated using the callback
-stored in \lstinline|avr->sleep|. In GDB mode, the time is used to listen for
-GDB commands, while the raw version simply calls usleep.
+If the \ac{CPU} is currently sleeping, the time spent is simulated using the callback
+stored in \lstinline|avr->sleep|. In \ac{GDB} mode, the time is used to listen for
+\ac{GDB} commands, while the raw version simply calls usleep.
 
 It is worth noting that
 we have improved the timing behavior by accumulating requested sleep cycles until
 a minimum of 200 usec has been reached. usleep cannot handle lower sleep times
 accurately, which caused an unrealistic execution slowdown.
 
-A special case occurs when the CPU is sleeping while interrupts are turned off.
+A special case occurs when the \ac{CPU} is sleeping while interrupts are turned off.
 In this scenario, there is way of ever waking up. Therefore, execution is halted
 gracefully.
 
@@ -322,7 +322,7 @@ interrupt (this depends solely on the interrupt vector address) is removed from
 the pending queue, interrupts are disabled in the status register, and the
 program counter is set to the interrupt vector.
 
-If the CPU is sleeping, interrupts can be raised by cycle timers.
+If the \ac{CPU} is sleeping, interrupts can be raised by cycle timers.
 
 \begin{lstlisting}
     if (step)
@@ -330,8 +330,8 @@ If the CPU is sleeping, interrupts can be raised by cycle timers.
 }
 \end{lstlisting}
 
-Wrapping up, if the current loop iteration was a GDB step, the state is set
-such that the next iteration will inform GDB and halt the CPU.
+Wrapping up, if the current loop iteration was a \ac{GDB} step, the state is set
+such that the next iteration will inform \ac{GDB} and halt the \ac{CPU}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -345,23 +345,23 @@ such that the next iteration will inform GDB and halt the CPU.
 The \lstinline|avr_t| struct requires some somple initialization before it is
 ready to by used by the main loop as discussed in the previous section.
 
-\lstinline|avr_make_mcu_by_name| fills in all details specific to an MCU. This
+\lstinline|avr_make_mcu_by_name| fills in all details specific to an \ac{MCU}. This
 includes settings such as memory sizes, register locations, available components,
-the default CPU frequency, etc \ldots
+the default \ac{CPU} frequency, etc \ldots
 
-The MCU definitions are located in the simavr/cores subdirectory of the simavr
+The \ac{MCU} definitions are located in the simavr/cores subdirectory of the simavr
 source tree and are compiled conditionally depending on the the local avr-libc
 support. A complete list of locally supported cores is printed by running simavr
 without any arguments.
 
 On successful completion, it returns a pointer to the \lstinline|avr_t| struct.
 
-If GDB support is desired, \lstinline|avr->gdb_port| must be set, and
+If \ac{GDB} support is desired, \lstinline|avr->gdb_port| must be set, and
 \lstinline|avr_gdb_init| must be called to create the required data structures,
 set the \lstinline|avr->run| and \lstinline|avr->sleep| callbacks, and listen
 on the specified port. It is also recommended to initially stop the cpu
 (\lstinline|avr->state = cpu_Stopped|) to delay program execution until it
-is started manually by GDB.
+is started manually by \ac{GDB}.
 
 Further settings can now be applied manually (typical candidates are logging and
 tracing levels).
@@ -372,15 +372,15 @@ tracing levels).
 
 We now have a fully initialized \lstinline|avr_t| struct and are ready to load
 code. This is accomplished using \lstinline|avr_read_firmware|, which uses
-elfutils to decode the ELF file and read it into an \lstinline|elf_firmware_t|
+elfutils to decode the \ac{ELF} file and read it into an \lstinline|elf_firmware_t|
 struct and \lstinline|avr_load_firmware| to load its contents into the
 \lstinline|avr_t| struct.
 
-Besides loading the program code into \lstinline|avr->flash| (and EEPROM contents
+Besides loading the program code into \lstinline|avr->flash| (and \ac{EEPROM} contents
 into \lstinline|avr->eeprom|, if available), there are several useful extended
-features which can be embedded directly into the ELF file.
+features which can be embedded directly into the \ac{ELF} file.
 
-The target MCU, frequency and voltages can be specified in the ELF file by using the
+The target \ac{MCU}, frequency and voltages can be specified in the \ac{ELF} file by using the
 \lstinline|AVR_MCU| and \lstinline|AVR_MCU_VOLTAGES| macros provided by
 avr\_mcu\_section.h:
 
@@ -390,7 +390,7 @@ AVR_MCU(16000000 /* Hz */, "atmega1280");
 AVR_MCU_VOLTAGES(3300 /* milliVolt */, 3300 /* milliVolt */, 3300 /* milliVolt */);
 \end{lstlisting}
 
-VCD traces can be set up automatically. The following code will create an 8-bit
+\ac{VCD} traces can be set up automatically. The following code will create an 8-bit
 trace on the UDR0 register, and a trace masked to display only the UDRE0 bit of
 the UCSR0A register.
 
@@ -402,7 +402,7 @@ const struct avr_mmcu_vcd_trace_t _mytrace[]  _MMCU_ = {
 \end{lstlisting}
 
 Several predefined can be sent from the firmware to simavr during program execution.
-At the time of writing, these include starting and stopping VCD traces, and putting
+At the time of writing, these include starting and stopping \ac{VCD} traces, and putting
 UART0 into loopback mode. An otherwise unused register must be specified
 to listen for command requests. During execution, writing a command to this
 register will trigger the associated action within simavr.
@@ -412,7 +412,7 @@ AVR_MCU_SIMAVR_COMMAND(&GPIOR0);
 
 int main() {
     /* [...] */
-    GPIOR0 = SIMAVR_CMD_VCD_START_TRACE;
+    GPIOR0 = SIMAVR_CMD_\ac{VCD}_START_TRACE;
     /* [...] */
 }
 \end{lstlisting}
@@ -448,8 +448,8 @@ firmware files. But how are instructions actually decoded and executed? Let's
 take a look at \lstinline|avr_run_one|, located in sim\_core.
 
 The opcode is reconstructed by retrieving the two bytes located at
-\lstinline|avr->flash[avr->pc]|. \lstinline|avr->pc| points to the LSB, and
-\lstinline|avr->pc + 1| to the MSB. Thus, the full opcode is reconstructed with:
+\lstinline|avr->flash[avr->pc]|. \lstinline|avr->pc| points to the \ac{LSB}, and
+\lstinline|avr->pc + 1| to the \ac{MSB}. Thus, the full opcode is reconstructed with:
 
 \begin{lstlisting}
 uint32_t opcode = (avr->flash[avr->pc + 1] << 8) | avr->flash[avr->pc];
@@ -460,7 +460,7 @@ Therefore, the next instruction is located at \lstinline|avr->pc + 2|. This
 default new program counter may still be altered in the course of processing
 in case of jumps, branches, calls and larger opcodes such as STS\cite{instructionset}.
 
-Note also that the AVR flash addresses are usually represented as word addresses
+Note also that the \ac{AVR} flash addresses are usually represented as word addresses
 (\lstinline|avr->pc >> 1|).
 
 Similar to the program counter, the spent cycles are set to a default value of 1.
@@ -468,7 +468,7 @@ Similar to the program counter, the spent cycles are set to a default value of 1
 The instruction and its operands are then extracted from the opcode and processed
 in a large switch statement. The instructions themselves can be roughly categorized
 into arithmetic and logic instructions, branch instructions, data transfer
-instructions, bit and bit-test instructions and MCU control instructions.
+instructions, bit and bit-test instructions and \ac{MCU} control instructions.
 
 Processing these will involve a number of typical tasks:
 
@@ -476,17 +476,17 @@ Processing these will involve a number of typical tasks:
 \item Status register modifications
 
 The status register is stored in \lstinline|avr->sreg| as a byte array.
-Most instructions alter the SREG in some way, and convenience functions such as
+Most instructions alter the \ac{SREG} in some way, and convenience functions such as
 \lstinline|get_compare_carry| are used to ease this task. Note that whenever the
-firmware reads from SREG, it must be reconstructed from \lstinline|avr->sreg|.
+firmware reads from \ac{SREG}, it must be reconstructed from \lstinline|avr->sreg|.
 
 \item Reading or writing memory
 
 \lstinline|_avr_set_ram| is used to write bytes to a specific address. Accessing
-an SREG will trigger a reconstruction similar to what has been discussed above.
-IO register accesses trigger any connected IO callbacks and raise all associated
-IRQs. If a GDB watchpoint has been hit, the CPU is stopped and a status report
-is sent to GDB. Data watchpoint support has been added by the author.
+an \ac{SREG} will trigger a reconstruction similar to what has been discussed above.
+\ac{IO} register accesses trigger any connected \ac{IO} callbacks and raise all associated
+\ac{IRQ}s. If a \ac{GDB} watchpoint has been hit, the \ac{CPU} is stopped and a status report
+is sent to \ac{GDB}. Data watchpoint support has been added by the author.
 
 \item Modifying the program counter
 
@@ -494,7 +494,7 @@ Jumps, skips, calls, returns and similar instructions alter the program counter.
 This is achieved by simply setting \lstinline|new_pc| to an appropriate value. Care must be
 taken to skip 32 bit instructions correctly.
 
-\item Altering MCU state
+\item Altering \ac{MCU} state
 
 Instructions such as SLEEP and BREAK directly alter the state of the simulation.
 
@@ -519,19 +519,19 @@ the associated \ac{ISR} and continue execution there.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{GDB}
+\section{\acf{GDB}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{IRQs}
+\section{\acf{IRQ}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{IO}
+\section{\acf{IO}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{VCD}
+\section{\acf{VCD}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -539,7 +539,7 @@ the associated \ac{ISR} and continue execution there.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Embedding MCU Information in Binaries}
+\section{Embedding \acs{MCU} Information in Binaries}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
