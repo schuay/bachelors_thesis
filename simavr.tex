@@ -213,10 +213,111 @@ forwarded to all chained IRQs.
 
 We will now take a closer look at the main loop implementation. Each call to
 avr\_run triggers the function stored in the run member of the avr\_t structure
-(avr->run). The two standard implementations are avr\_callback\_run\_raw and
+(avr-\textgreater run). The two standard implementations are avr\_callback\_run\_raw and
 avr\_callback\_run\_gdb, located in sim\_avr.c. The essence of both function is
-identical, but avr\_callback\_run\_gdb contains additional logic for gdb
-handling (network protocol, stepping).
+identical; since avr\_callback\_run\_gdb contains additional logic for GDB
+handling (network protocol, stepping), we will examine it further and point out
+any differences to the the raw version. Several comments and irrelevant code
+sections have been removed.
+
+\begin{lstlisting}
+void avr_callback_run_gdb(avr_t * avr)
+{
+    avr_gdb_processor(avr, avr->state == cpu_Stopped);
+
+    if (avr->state == cpu_Stopped)
+        return ;
+
+    int step = avr->state == cpu_Step;
+    if (step)
+        avr->state = cpu_Running;
+\end{lstlisting}
+
+This initial section is gdb specific. avr\_gdb\_processor is responsible for
+handling GDB network communication. It also checks if execution has reached a
+breakpoint or the end of a step and stops the CPU if it did.
+
+If GDB has transmitted a step command, we need to save the state during the
+main section of the loop (the CPU ``runs'' for one instruction) and restore to
+the ``StepDone'' state at on completion.
+
+\begin{lstlisting}
+    avr_flashaddr_t new_pc = avr->pc;
+
+    if (avr->state == cpu_Running) {
+        new_pc = avr_run_one(avr);
+    }
+\end{lstlisting}
+
+We have now reached the actual execution of the current instruction. If the CPU
+is currently running, avr\_run\_one decodes the instruction located in flash memory (avr-\textgreater
+flash) and triggers all necessary actions. This can include setting the CPU
+state (SLEEP), updating the status register SREG, writing or reading from memory
+locations, altering the program counter PC, etc \ldots
+
+Finally, the cycle counter (avr-\textgreater cycle) is updated and the new
+program counter is returned.
+
+\begin{lstlisting}
+    if (avr->sreg[S_I] && !avr->i_shadow)
+        avr->interrupts.pending_wait++;
+    avr->i_shadow = avr->sreg[S_I];
+\end{lstlisting}
+
+This section ensures that interrupts are not triggered immediately when
+enabling the interrupt flag in the status register, but with an (additional)
+delay of one instruction.
+
+\begin{lstlisting}
+    avr_cycle_count_t sleep = avr_cycle_timer_process(avr);
+    avr->pc = new_pc;
+\end{lstlisting}
+
+Next, all due cycle timers are processed. Cycle timers are one of the
+most important and heavily used mechanisms in simavr. A timer allows scheduling
+execution of a callback function once a specific count of execution cycles have
+passed, thus simulating events which occur after a specific amount of time has
+passed. For example, the avr\_timer module uses cycle timers to schedule timer
+interrupts.
+
+The returned estimated sleep time is set to the next pending event cycle (or a
+hardcoded limit of 1000 cycles if none exist).
+
+\begin{lstlisting}
+    if (avr->state == cpu_Sleeping) {
+        if (!avr->sreg[S_I]) {
+            avr->state = cpu_Done;
+            return;
+        }
+        avr->sleep(avr, sleep);
+        avr->cycle += 1 + sleep;
+    }
+\end{lstlisting}
+
+If the CPU is currently sleeping, the time spent is simulated using the callback
+stored in \lstinline|avr->sleep|. In GDB mode, the time is used to listen for
+GDB commands, while the raw version simply calls usleep.
+
+It is worth noting that
+we have improved the timing behavior by accumulating requested sleep cycles until
+a minimum of 200 usec has been reached. usleep cannot handle lower sleep times
+accurately, which caused an unrealistic execution slowdown.
+
+A special case occurs when the CPU is sleeping while interrupts are turned off.
+In this scenario, there is way of ever waking up. Therefore, execution is halted
+gracefully.
+
+\begin{lstlisting}
+    // Interrupt servicing might change the PC too, during 'sleep'
+    if (avr->state == cpu_Running || avr->state == cpu_Sleeping)
+        avr_service_interrupts(avr);
+
+    // if we were stepping, use this state to inform remote gdb
+    if (step)
+        avr->state = cpu_StepDone;
+}
+\end{lstlisting}
+
 
 
 \subsection{avr\_t Initialization}
