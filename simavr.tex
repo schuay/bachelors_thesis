@@ -15,7 +15,8 @@ simavr is a small cross-platform AVR simulator written with simplicity and
 hackability in mind. It is supported on Linux and OS X, but should run on any
 platform with avr-libc support.
 
-In the following sections, we will take a tour through simavr internals.
+In the following sections, we will take a tour through simavr internals\footnote{
+Most, if not all of the code examined in this chapter is taken directly from simavr.}.
 Without further delay, let's jump right in and walk through a short demo.
 
 
@@ -334,8 +335,109 @@ such that the next iteration will inform GDB and halt the CPU.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\lstinline|avr_t| Initialization}
+\section{Initialization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{\lstinline|avr_t| Initialization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The \lstinline|avr_t| struct requires some somple initialization before it is
+ready to by used by the main loop as discussed in the previous section.
+
+\lstinline|avr_make_mcu_by_name| fills in all details specific to an MCU. This
+includes settings such as memory sizes, register locations, available components,
+the default CPU frequency, etc \ldots
+
+The MCU definitions are located in the simavr/cores subdirectory of the simavr
+source tree and are compiled conditionally depending on the the local avr-libc
+support. A complete list of locally supported cores is printed by running simavr
+without any arguments.
+
+On successful completion, it returns a pointer to the \lstinline|avr_t| struct.
+
+If GDB support is desired, \lstinline|avr->gdb_port| must be set, and
+\lstinline|avr_gdb_init| must be called to create the required data structures,
+set the \lstinline|avr->run| and \lstinline|avr->sleep| callbacks, and listen
+on the specified port. It is also recommended to initially stop the cpu
+(\lstinline|avr->state = cpu_Stopped|) to delay program execution until it
+is started manually by GDB.
+
+Further settings can now be applied manually (typical candidates are logging and
+tracing levels).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Firmware}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We now have a fully initialized \lstinline|avr_t| struct and are ready to load
+code. This is accomplished using \lstinline|avr_read_firmware|, which uses
+elfutils to decode the ELF file and read it into an \lstinline|elf_firmware_t|
+struct and \lstinline|avr_load_firmware| to load its contents into the
+\lstinline|avr_t| struct.
+
+Besides loading the program code into \lstinline|avr->flash| (and EEPROM contents
+into \lstinline|avr->eeprom|, if available), there are several useful extended
+features which can be embedded directly into the ELF file.
+
+The target MCU, frequency and voltages can be specified in the ELF file by using the
+\lstinline|AVR_MCU| and \lstinline|AVR_MCU_VOLTAGES| macros provided by
+avr\_mcu\_section.h:
+
+\begin{lstlisting}
+#include "avr_mcu_section.h"
+AVR_MCU(16000000 /* Hz */, "atmega1280");
+AVR_MCU_VOLTAGES(3300 /* milliVolt */, 3300 /* milliVolt */, 3300 /* milliVolt */);
+\end{lstlisting}
+
+VCD traces can be set up automatically. The following code will create an 8-bit
+trace on the UDR0 register, and a trace masked to display only the UDRE0 bit of
+the UCSR0A register.
+
+\begin{lstlisting}
+const struct avr_mmcu_vcd_trace_t _mytrace[]  _MMCU_ = {
+    { AVR_MCU_VCD_SYMBOL("UDR0"), .what = (void*)&UDR0, },
+    { AVR_MCU_VCD_SYMBOL("UDRE0"), .mask = (1 << UDRE0), .what = (void*)&UCSR0A, },
+};
+\end{lstlisting}
+
+Several predefined can be sent from the firmware to simavr during program execution.
+At the time of writing, these include starting and stopping VCD traces, and putting
+UART0 into loopback mode. An otherwise unused register must be specified
+to listen for command requests. During execution, writing a command to this
+register will trigger the associated action within simavr.
+
+\begin{lstlisting}
+AVR_MCU_SIMAVR_COMMAND(&GPIOR0);
+
+int main() {
+    /* [...] */
+    GPIOR0 = SIMAVR_CMD_VCD_START_TRACE;
+    /* [...] */
+}
+\end{lstlisting}
+
+Likewise, a register can be specified for use as a debugging output. All bytes
+written to this register will be output to the console.
+
+\begin{lstlisting}
+AVR_MCU_SIMAVR_CONSOLE(&GPIOR0);
+
+int main() {
+    /* [...] */
+    const char *s = "Hello World\r";
+    for (const char *t = s; *t; t++)
+        GPIOR0 = *t;
+    /* [...] */
+}
+\end{lstlisting}
+
+Usually, UART0 is used for this purpose. The simplest debug output can be achieved
+by binding \lstinline|stdout| to \lstinline|UART0| as described by the avr-libc
+documentation \cite{libc}, and then using \lstinline|printf| and co. This alternate console
+output is provided in case using UART0 is not possible or desired.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Instruction Processing}
