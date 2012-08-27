@@ -512,7 +512,35 @@ duration, and the new program counter is returned.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An interrupt is an asynchronous signal which causes the the \ac{CPU} to jump to
-the associated \ac{ISR} and continue execution there.
+the associated \ac{ISR} and continue execution there. In the \ac{AVR} architecture,
+the interrupt priority is ordered according to its place in the interrupt
+vector table. When an interrupt is serviced, interrupts are disabled globally.
+Let's take a look at how interrupts are represented in simavr:
+
+\begin{lstlisting}
+typedef struct avr_int_vector_t {
+    uint8_t         vector;
+    avr_regbit_t    enable;
+    avr_regbit_t    raised;
+    avr_irq_t       irq;
+    uint8_t         pending : 1,
+                    trace : 1,
+                    raise_sticky : 1;
+} avr_int_vector_t;
+\end{lstlisting}
+
+Each interrupt vector has an \lstinline|avr_int_vector_t|. \lstinline|vector| is
+actual vector address, for example \lstinline|INT0_vect|. \lstinline|enable|
+and \lstinline|raised| specify the \ac{IO} register index for, respectively, the
+interrupt enable flag and the interrupt raised bit (again taking \lstinline|INT0|
+as an example, enable would point to the \lstinline|INT0| bit in \lstinline|EIMSK|,
+and raised to \lstinline|INTF0| in \lstinline|EIFR|. \lstinline|irq| is raised to
+1 when the interrupt is triggered, and to 0 when it is serviced.
+
+Usually, raised flags are cleared automatically upon interrupt servicing. However,
+this does not count for all interrupts(notably, \lstinline|TWINT|).
+\lstinline|raise_sticky| was introduced by the author to handle this special case.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Cycle Timers}
