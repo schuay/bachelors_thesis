@@ -443,6 +443,70 @@ output is provided in case using UART0 is not possible or desired.
 \section{Instruction Processing}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+We have now covered \lstinline|avr_t| initialization, the main loop, and loading
+firmware files. But how are instructions actually decoded and executed? Let's
+take a look at \lstinline|avr_run_one|, located in sim\_core.
+
+The opcode is reconstructed by retrieving the two bytes located at
+\lstinline|avr->flash[avr->pc]|. \lstinline|avr->pc| points to the LSB, and
+\lstinline|avr->pc + 1| to the MSB. Thus, the full opcode is reconstructed with:
+
+\begin{lstlisting}
+uint32_t opcode = (avr->flash[avr->pc + 1] << 8) | avr->flash[avr->pc];
+\end{lstlisting}
+
+As we have seen, \lstinline|avr->pc| represents the byte address in flash memory.
+Therefore, the next instruction is located at \lstinline|avr->pc + 2|. This
+default new program counter may still be altered in the course of processing
+in case of jumps, branches, calls and larger opcodes such as STS\cite{instructionset}.
+
+Note also that the AVR flash addresses are usually represented as word addresses
+(\lstinline|avr->pc >> 1|).
+
+Similar to the program counter, the spent cycles are set to a default value of 1.
+
+The instruction and its operands are then extracted from the opcode and processed
+in a large switch statement. The instructions themselves can be roughly categorized
+into arithmetic and logic instructions, branch instructions, data transfer
+instructions, bit and bit-test instructions and MCU control instructions.
+
+Processing these will involve a number of typical tasks:
+
+\begin{itemize}
+\item Status register modifications
+
+The status register is stored in \lstinline|avr->sreg| as a byte array.
+Most instructions alter the SREG in some way, and convenience functions such as
+\lstinline|get_compare_carry| are used to ease this task. Note that whenever the
+firmware reads from SREG, it must be reconstructed from \lstinline|avr->sreg|.
+
+\item Reading or writing memory
+
+\lstinline|_avr_set_ram| is used to write bytes to a specific address. Accessing
+an SREG will trigger a reconstruction similar to what has been discussed above.
+IO register accesses trigger any connected IO callbacks and raise all associated
+IRQs. If a GDB watchpoint has been hit, the CPU is stopped and a status report
+is sent to GDB. Data watchpoint support has been added by the author.
+
+\item Modifying the program counter
+
+Jumps, skips, calls, returns and similar instructions alter the program counter.
+This is achieved by simply setting \lstinline|new_pc| to an appropriate value. Care must be
+taken to skip 32 bit instructions correctly.
+
+\item Altering MCU state
+
+Instructions such as SLEEP and BREAK directly alter the state of the simulation.
+
+\item Stack operations
+
+Pushing and popping the stack involve altering the stack pointer in addition
+to the actual memory access. 
+\end{itemize}
+
+Upon conclusion, \lstinline|avr->cycle| is updated with the actual instruction
+duration, and the new program counter is returned.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Interrupts}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
