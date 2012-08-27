@@ -7,11 +7,7 @@
 \chapter{simavr Internals} \label{chapter:simavr}
 
 It is necessary to understand simavr's internals before going on to discuss
-qsimavr's design. We will begin by taking a brief look at the most important
-concepts before expanding on these and further topics in simavr. Subsequently,
-we will examine how qsimavr uses and expands upon simavr.
-
-\section{simavr}
+qsimavr's design.
 
 simavr is a small cross-platform AVR simulator written with simplicity and
 hackability in mind. It is supported on Linux and OS X, but should run on any
@@ -20,7 +16,7 @@ platform with avr-libc support.
 In the following sections, we will take a tour through simavr internals.
 Without further delay, let's jump right in and walk through a short demo.
 
-\subsection{simavr Example Walkthrough}
+\section{simavr Example Walkthrough}
 
 The following program is taken from the board\_i2ctest simavr example. Minor
 modifications have been made to focus on the essential section. Error handling
@@ -209,7 +205,7 @@ an \lstinline|i2c_eeprom_t| pointer for further use.
 Outgoing messages are sent by raising the internal IRQ. This message is then
 forwarded to all chained IRQs.
 
-\subsection{Main Loop}
+\section{Main Loop}
 
 We will now take a closer look at the main loop implementation. Each call to
 \lstinline|avr_run| triggers the function stored in the run member of the \lstinline|avr_t| structure
@@ -328,17 +324,17 @@ If the CPU is sleeping, interrupts can be raised by cycle timers.
 Wrapping up, if the current loop iteration was a GDB step, the state is set
 such that the next iteration will inform GDB and halt the CPU.
 
-\subsection{\lstinline|avr_t| Initialization}
-\subsection{Instruction Processing}
-\subsection{Interrupts}
-\subsection{Cycle Timers}
-\subsection{GDB}
-\subsection{IRQs}
-\subsection{IO}
-\subsection{VCD}
-\subsection{Example of an internal module implementation} %TODO
-\subsection{Embedding MCU Information in Binaries}
-\subsection{Core Definitions}
+\section{\lstinline|avr_t| Initialization}
+\section{Instruction Processing}
+\section{Interrupts}
+\section{Cycle Timers}
+\section{GDB}
+\section{IRQs}
+\section{IO}
+\section{VCD}
+\section{Example of an internal module implementation} %TODO
+\section{Embedding MCU Information in Binaries}
+\section{Core Definitions}
 
 %%
 %% = eof =====================================================================
