@@ -1,0 +1,236 @@
+%%
+%% Design Approach
+%%
+%% This file should be edited by user
+%%
+
+\chapter{simavr Internals} \label{chapter:simavr}
+
+It is necessary to understand simavr's internals before going on to discuss
+qsimavr's design. We will begin by taking a brief look at the most important
+concepts before expanding on these and further topics in simavr. Subsequently,
+we will examine how qsimavr uses and expands upon simavr.
+
+\section{simavr}
+
+simavr is a small cross-platform AVR simulator written with simplicity and
+hackability in mind. It is supported on Linux and OS X, but should run on any
+platform with avr-libc support.
+
+In the following sections, we will take a tour through simavr internals.
+Without further delay, let's jump right in and walk through a short demo.
+
+\subsection{simavr Example Walkthrough}
+
+The following program is taken from the board\_i2ctest simavr example. Minor
+modifications have been made to focus on the essential section. Error handling
+is mostly omitted in favor of readability.
+
+\begin{lstlisting}
+#include <stdlib.h>
+#include <stdio.h>
+#include <libgen.h>
+#include <pthread.h>
+
+#include "sim_avr.h"
+#include "avr_twi.h"
+#include "sim_elf.h"
+#include "sim_gdb.h"
+#include "sim_vcd_file.h"
+#include "i2c_eeprom.h"
+\end{lstlisting}
+
+The actual simulation of the external EEPROM component is located in
+i2c\_eeprom.h. We will take a look at the implementation later on.
+
+\begin{lstlisting}
+avr_t * avr = NULL;
+avr_vcd_t vcd_file;
+
+i2c_eeprom_t ee;
+\end{lstlisting}
+
+avr is the main data structure. It encapsulates the entire state of the
+core simulation, including register, SRAM and flash contents, the CPU state, the
+current cycle count, callbacks for various tasks, pending interrupts, and more.
+
+vcd\_file represents the file target for the \emph{value change dump} module. It
+is used to dump the level changes of desired pins (or IRQ's in general) into a
+file which can be subsequently viewed using utilities such as \emph{gtkwave}.
+
+ee contains the internal state of the simulated external EEPROM.
+
+\begin{lstlisting}
+int main(int argc, char *argv[])
+{
+    elf_firmware_t f;
+    elf_read_firmware("atmega1280_i2ctest.axf", &f);
+\end{lstlisting}
+
+The firmware is loaded from the specified file. Note that exactly the same file
+can be executed on the AVR hardware without changes. MMCU and frequency
+information have been embedded into the binary and are therefore available in
+elf\_firmware\_t.
+
+\begin{lstlisting}
+    avr = avr_make_mcu_by_name(f.mmcu);
+    avr_init(avr);
+    avr_load_firmware(avr, &f);
+\end{lstlisting}
+
+The avr\_t instance is then constructed from the core file of the specified
+MMCU, and initialized. The firmware is then copied into the program memory.
+
+\begin{lstlisting}
+    i2c_eeprom_init(avr, &ee, 0xa0, 0xfe, NULL, 1024);
+    i2c_eeprom_attach(avr, &ee, AVR_IOCTL_TWI_GETIRQ(0));
+\end{lstlisting}
+
+AVR\_IOCTL\_TWI\_GETIRQ is a macro to retrieve the internal IRQ of the TWI
+simulation. IRQ's are the main method of communication between simavr and
+external components and are also used liberally throughout simavr internals.
+Similar macros exist for other important AVR parts such as the ADC, IO ports,
+timers, etc.
+
+\begin{lstlisting}
+    avr->gdb_port = 1234;
+    avr->state = cpu_Stopped;
+    avr_gdb_init(avr);
+\end{lstlisting}
+
+This section sets up simavr's gdb infrastructure to listen on port 1234. The
+CPU is stopped to allow gdb to attach before execution begins.
+
+\begin{lstlisting}
+    avr_vcd_init(avr, "gtkwave_output.vcd", &vcd_file, 100000 /* usec */);
+    avr_vcd_add_signal(
+        &vcd_file,
+        avr_io_getirq(avr, AVR_IOCTL_TWI_GETIRQ(0), TWI_IRQ_STATUS),
+        8 /* bits */,
+        "TWSR");
+\end{lstlisting}
+
+Next, a value change dump output is configured to track changes to the
+TWI\_IRQ\_STATUS IRQ. The file may then be viewed using the \emph{gtkwave}
+application.
+
+\begin{lstlisting}
+    int state = cpu_Running;
+    while ((state != cpu_Done) && (state != cpu_Crashed))
+        state = avr_run(avr);
+
+    return 0;
+}
+\end{lstlisting}
+
+Finally, we have reached the simple main loop. Each iteration executes one
+instruction, handles any pending interrupts and cycle timers, and sleeps if
+possible. As soon as execution completes or crashes, simulation stops and we
+exit the program.
+
+We will now examine the relevant parts of the i2c\_eeprom implementation.
+Details have been omitted and only communication with the avr\_t instance are
+shown.
+
+\begin{lstlisting}
+static const char * _ee_irq_names[2] = {
+		[TWI_IRQ_MISO] = "8>eeprom.out",
+		[TWI_IRQ_MOSI] = "32<eeprom.in",
+};
+
+void
+i2c_eeprom_init(
+		struct avr_t * avr,
+		i2c_eeprom_t * p,
+		uint8_t addr,
+		uint8_t mask,
+		uint8_t * data,
+		size_t size)
+{
+
+    /* [...] */
+
+	p->irq = avr_alloc_irq(&avr->irq_pool, 0, 2, _ee_irq_names);
+	avr_irq_register_notify(p->irq + TWI_IRQ_MOSI, i2c_eeprom_in_hook, p);
+
+    /* [...] */
+}
+\end{lstlisting}
+
+First, the EEPROM allocates its own private IRQs. The EEPROM implementation
+does not know or care to which simavr IRQ's they will be attached. It then
+attaches a callback function (i2c\_eeprom\_in\_hook) to the MOSI IRQ. This
+function will be called whenever a value is written to the IRQ. The pointer to
+the EEPROM state p is passed to each of these callback function calls.
+
+\begin{lstlisting}
+void
+i2c_eeprom_attach(
+		struct avr_t * avr,
+		i2c_eeprom_t * p,
+		uint32_t i2c_irq_base )
+{
+	avr_connect_irq(
+		p->irq + TWI_IRQ_MISO,
+		avr_io_getirq(avr, i2c_irq_base, TWI_IRQ_MISO));
+	avr_connect_irq(
+		avr_io_getirq(avr, i2c_irq_base, TWI_IRQ_MOSI),
+		p->irq + TWI_IRQ_MOSI );
+}
+\end{lstlisting}
+
+The private IRQs are then attached to simavr's internal IRQs. This is called
+chaining - all messages raised are forwarded to all chained IRQs.
+
+\begin{lstlisting}
+static void
+i2c_eeprom_in_hook(
+		struct avr_irq_t * irq,
+		uint32_t value,
+		void * param)
+{
+	i2c_eeprom_t * p = (i2c_eeprom_t*)param;
+
+    /* [...] */
+
+    avr_raise_irq(p->irq + TWI_IRQ_MISO,
+            avr_twi_irq_msg(TWI_COND_ACK, p->selected, 1));
+
+    /* [...] */
+}
+\end{lstlisting}
+
+Finally, we've reached the IRQ callback function. It is responsible for
+simulating communications between simavr (acting as the TWI master) and the
+EEPROM (as the TWI slave). The EEPROM state which was previously passed to
+avr\_irq\_register\_notify is contained in the param variable and cast back to
+an i2c\_eeprom\_t pointer for further use.
+
+Outgoing messages are sent by raising the internal IRQ. This message is then
+forwarded to all chained IRQs.
+
+\subsection{Main Loop}
+
+We will now take a closer look at the main loop implementation. Each call to
+avr\_run triggers the function stored in the run member of the avr\_t structure
+(avr->run). The two standard implementations are avr\_callback\_run\_raw and
+avr\_callback\_run\_gdb, located in sim\_avr.c. The essence of both function is
+identical, but avr\_callback\_run\_gdb contains additional logic for gdb
+handling (network protocol, stepping).
+
+
+\subsection{avr\_t Initialization}
+\subsection{Instruction Processing}
+\subsection{Interrupts}
+\subsection{Cycle Timers}
+\subsection{GDB}
+\subsection{IRQs}
+\subsection{IO}
+\subsection{VCD}
+\subsection{Example of an internal module implementation} %TODO
+\subsection{Embedding MCU Information in Binaries}
+\subsection{Core Definitions}
+
+%%
+%% = eof =====================================================================
+%%
