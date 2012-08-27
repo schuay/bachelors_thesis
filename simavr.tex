@@ -218,7 +218,9 @@ forwarded to all chained \ac{IRQ}s.
 
 We will now take a closer look at the main loop implementation. Each call to
 \lstinline|avr_run| triggers the function stored in the run member of the \lstinline|avr_t| structure
-(\lstinline|avr->run|). The two standard implementations are \lstinline|avr_callback_run_raw| and
+(\lstinline|avr->run|\footnote{Whenever \lstinline|avr| is mentioned in a code
+section, it is assumed to be the main \lstinline|avr_t| struct.}).
+The two standard implementations are \lstinline|avr_callback_run_raw| and
 \lstinline|avr_callback_run_gdb|, located in sim\_avr.c. The essence of both function is
 identical; since \lstinline|avr_callback_run_gdb| contains additional logic for \ac{GDB}
 handling (network protocol, stepping), we will examine it further and point out
@@ -515,6 +517,11 @@ An interrupt is an asynchronous signal which causes the the \ac{CPU} to jump to
 the associated \ac{ISR} and continue execution there. In the \ac{AVR} architecture,
 the interrupt priority is ordered according to its place in the interrupt
 vector table. When an interrupt is serviced, interrupts are disabled globally.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Structures}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Let's take a look at how interrupts are represented in simavr:
 
 \begin{lstlisting}
@@ -540,6 +547,41 @@ and raised to \lstinline|INTF0| in \lstinline|EIFR|. \lstinline|irq| is raised t
 Usually, raised flags are cleared automatically upon interrupt servicing. However,
 this does not count for all interrupts(notably, \lstinline|TWINT|).
 \lstinline|raise_sticky| was introduced by the author to handle this special case.
+
+Interrupt vector definitions are stored in an \lstinline|avr_int_table_t|,
+\lstinline|avr->interrupts|.
+
+\begin{lstlisting}
+typedef struct  avr_int_table_t {
+    avr_int_vector_t * vector[64];
+    uint8_t         vector_count;
+    uint8_t         pending_wait;
+    avr_int_vector_t * pending[64];
+    uint8_t         pending_w,
+                    pending_r;
+} avr_int_table_t, *avr_int_table_p;
+\end{lstlisting}
+
+\lstinline|pending_wait| stores the number of cycles to wait before servicing
+pending interrupts. This simulates the real interrupt delay that occurs between
+raising and servicing, and whenever interrupts are enabled
+(and previously disabled).
+
+\lstinline|pending| along with \lstinline|pending_w| and \lstinline|pending_r|
+represents the \ac{FIFO} queue of pending interrupts. Note that the \ac{FIFO}
+queue deviates from the actual priority-based interrupt behavior of \ac{AVR}
+interrupts.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Raising and Servicing Interrupts}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+When an interrupt \lstinline|vector| is raised, \lstinline|vector->pending| is
+set, \lstinline|vector| is added to the \lstinline|pending| \ac{FIFO} of
+\lstinline|avr->interrupts|, and a non-zero \lstinline|pending_wait| time is
+ensured. If the \ac{CPU} is currently sleeping, it is woken up.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
