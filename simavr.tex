@@ -57,7 +57,7 @@ core simulation, including register, \ac{SRAM} and flash contents, the \ac{CPU} 
 current cycle count, callbacks for various tasks, pending interrupts, and more.
 
 \lstinline|vcd_file| represents the file target for the \emph{value change dump} module. It
-is used to dump the level changes of desired pins (or \ac{IRQ}'s in general) into a
+is used to dump the level changes of desired pins (or \acp{IRQ} in general) into a
 file which can be subsequently viewed using utilities such as \emph{gtkwave}.
 
 \lstinline|ee| contains the internal state of the simulated external \ac{EEPROM}.
@@ -90,7 +90,7 @@ firmware into program memory.
 \end{lstlisting}
 
 \lstinline|AVR_IOCTL_TWI_GETIRQ| is a macro to retrieve the internal \ac{IRQ} of the \ac{TWI}
-simulation. \ac{IRQ}'s are the main method of communication between simavr and
+simulation. \acp{IRQ} are the main method of communication between simavr and
 external components and are also used liberally throughout simavr internals.
 Similar macros exist for other important \ac{AVR} parts such as the \ac{ADC}, \ac{IO} ports,
 timers, etc.
@@ -160,8 +160,8 @@ i2c_eeprom_init(
 }
 \end{lstlisting}
 
-First, the \ac{EEPROM} allocates its own private \ac{IRQ}s. The \ac{EEPROM} implementation
-does not know or care to which simavr \ac{IRQ}'s they will be attached. It then
+First, the \ac{EEPROM} allocates its own private \acp{IRQ}. The \ac{EEPROM} implementation
+does not know or care to which simavr \acp{IRQ} they will be attached. It then
 attaches a callback function (\lstinline|i2c_eeprom_in_hook|) to the \ac{MOSI} \ac{IRQ}. This
 function will be called whenever a value is written to the \ac{IRQ}. The pointer to
 the \ac{EEPROM} state p is passed to each of these callback function calls.
@@ -182,8 +182,8 @@ i2c_eeprom_attach(
 }
 \end{lstlisting}
 
-The private \ac{IRQ}s are then attached to simavr's internal \ac{IRQ}s. This is called
-chaining - all messages raised are forwarded to all chained \ac{IRQ}s.
+The private \acp{IRQ} are then attached to simavr's internal \acp{IRQ}. This is called
+chaining - all messages raised are forwarded to all chained \acp{IRQ}.
 
 \begin{lstlisting}
 static void
@@ -210,7 +210,7 @@ simulating communications between simavr (acting as the \ac{TWI} master) and the
 an \lstinline|i2c_eeprom_t| pointer for further use.
 
 Outgoing messages are sent by raising the internal \ac{IRQ}. This message is then
-forwarded to all chained \ac{IRQ}s.
+forwarded to all chained \acp{IRQ}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -488,7 +488,7 @@ firmware reads from \ac{SREG}, it must be reconstructed from \lstinline|avr->sre
 \lstinline|_avr_set_ram| is used to write bytes to a specific address. Accessing
 an \ac{SREG} will trigger a reconstruction similar to what has been discussed above.
 \ac{IO} register accesses trigger any connected \ac{IO} callbacks and raise all associated
-\ac{IRQ}s. If a \ac{GDB} watchpoint has been hit, the \ac{CPU} is stopped and a status report
+\acp{IRQ}. If a \ac{GDB} watchpoint has been hit, the \ac{CPU} is stopped and a status report
 is sent to \ac{GDB}. Data watchpoint support has been added by the author.
 
 \item Modifying the program counter
@@ -649,7 +649,7 @@ callback itself).
 
 The cycle timer system is used during the main loop to determine sleep durations;
 if there are any pending timers, the sleep callback may sleep until the next timer
-is scheduled. Otherwise, a default value of 1000 cycles is returned. \ac{IRQ}s
+is scheduled. Otherwise, a default value of 1000 cycles is returned. \acp{IRQ}
 and interrupts caused by external events (for example, a ``touch'' event transmitted
 from the simulated touchscreen component) are and can \emph{not} be taken into
 account.
@@ -674,7 +674,7 @@ accurate method of scheduling interrupts in simavr.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{IRQ}}
+\section{\acfp{IRQ}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -682,7 +682,7 @@ accurate method of scheduling interrupts in simavr.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{VCD}}
+\section{\acfp{VCD}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
