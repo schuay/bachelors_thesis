@@ -11,8 +11,12 @@
 It is necessary to understand \simavr's internals before going on to discuss
 \qsimavr's design.
 
-\simavr is a small cross-platform \ac{AVR} simulator written with simplicity and
-hackability in mind. It is supported on Linux and OS X, but should run on any
+\simavr is a small cross-platform \ac{AVR} simulator written with simplicity, efficiency and
+hackability in mind\footnote{
+%
+\simavr also tries to avoid heap allocation at runtime.
+%
+}. It is supported on Linux and OS X, but should run on any
 platform with avr-libc support.
 
 In the following sections, we will take a tour through \simavr internals\footnote{
@@ -443,7 +447,7 @@ This alternate console output is provided in case using UART0 is not possible or
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Instruction Processing}
+\section{Instruction Processing} \label{section:instruction_processing}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We have now covered \lstinline|avr_t| initialization, the main loop, and loading
@@ -860,8 +864,71 @@ avr_raise_irq(
 \section{\acf{IO}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO
+The \lstinline|IO| module consists of two separate, yet complementary parts: on the one hand,
+a systematic way of defining actions that take place when \lstinline|IO| registers
+are accessed, and on the other the \lstinline|avr_io_t| infrastructure, which
+provides unified access to module \acp{IRQ}, reset and deallocation callbacks,
+and a \ac{IOCTL} system.
 
+We will examine the \ac{IO} register callback system first. Whenever the \simavr
+core reads or writes an \ac{IO} register during instruction processing (see section
+\ref{section:instruction_processing}), it first checks if a callback exists for
+that address. Assuming it does, a write access will result in a call to the
+write callback instead of setting \lstinline|avr->data| directly:
+
+\begin{lstlisting}
+static inline void _avr_set_r(avr_t * avr, uint8_t r, uint8_t v)
+{
+    /* [...] */
+    uint8_t io = AVR_DATA_TO_IO(r);
+    if (avr->io[io].w.c)
+        avr->io[io].w.c(avr, r, v, avr->io[io].w.param);
+    else
+        avr->data[r] = v;
+    if (avr->io[io].irq) {
+        avr_raise_irq(avr->io[io].irq + AVR_IOMEM_IRQ_ALL, v);
+        for (int i = 0; i < 8; i++)
+            avr_raise_irq(avr->io[io].irq + i, (v >> i) & 1);
+    }
+    /* [...] */
+}
+\end{lstlisting}
+
+This snippet contains several interesting bits; first of all, we are reminded that \ac{IO}
+addresses are offset by \lstinline|0x20| (these are added by \lstinline|AVR_DATA_TO_IO|).
+Next up, we see that write callbacks need to set the \lstinline|avr->data| value
+themselves if necessary. Notice also that a custom parameter is passed into the callback,
+like most other callback systems in \simavr. Finally, the associated \lstinline|IOMEM| \acp{IRQ} are
+raised; both bitwise and the byte \ac{IRQ} \lstinline|AVR_IOMEM_IRQ_ALL|.
+
+Read accesses are very similar, except that (somewhat counter-intuitively), the value returned
+by the callback is automatically written to \lstinline|avr->data|.
+
+Access callbacks plus associated \lstinline|IOMEM| \acp{IRQ} are stored
+in the \lstinline|avr->io| array:
+
+\begin{lstlisting}
+struct {
+    struct avr_irq_t * irq;
+    struct {
+        void * param;
+        avr_io_read_t c;
+    } r;
+    struct {
+        void * param;
+        avr_io_write_t c;
+    } w;
+} io[MAX_IOs];
+\end{lstlisting}
+
+Callbacks are registered using the function duo of \lstinline|avr_register_io_write|
+and \lstinline|avr_register_io_read|. \acp{IRQ} are created on-demand whenever
+the \lstinline|avr_iomem_getirq| function is called.
+
+The included \simavr modules (files beginning with the \verb|avr_| prefix)
+provide many practical examples of \ac{IO} callback usage; for example,
+the \verb|avr_timer| module uses \ac{IO} callbacks to start the timer when
+a clock source is enabled through the timer registers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{VCD} Files}
