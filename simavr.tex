@@ -21,7 +21,7 @@ Without further delay, let's jump right in and walk through a short demo.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\emph{simavr} Example Walkthrough}
+\section{\emph{simavr} Example Walkthrough} \label{section:simavr_example_walkthrough}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The following program is taken from the board\_i2ctest \emph{simavr} example. Minor
@@ -796,17 +796,65 @@ in a \lstinline|value| of 0 and vice versa).
 Setting \lstinline|IRQ_FLAG_FILTERED| instructs \emph{simavr} to ignore \ac{IRQ}
 raises with unchanged values.
 
+\lstinline|hook| contains a linked list of chained \acp{IRQ} and
+\lstinline|avr_irq_notify_t| callbacks.
+
 \begin{lstlisting}
 typedef void (*avr_irq_notify_t)(
         struct avr_irq_t * irq,
         uint32_t value,
         void * param);
+
+void
+avr_irq_register_notify(
+        avr_irq_t * irq,
+        avr_irq_notify_t notify,
+        void * param);
+\end{lstlisting}
+
+Callbacks are executed whenever an \ac{IRQ} is raised (and is not filtered).
+Chained \acp{IRQ} are raised whenever the \ac{IRQ} they are connected to is raised.
+
+As briefly mentioned in section \ref{section:simavr_example_walkthrough}, module
+implementations usually structure communication with the \emph{simavr} core by
+allocating their own private \acp{IRQ}, which are then connected to the target
+\emph{simavr} \acp{IRQ}. Callbacks are registered on private \acp{IRQ};
+likewise, only private \acp{IRQ} are raised. This
+ensures maximum flexibility since \ac{IRQ} connections are defined in one single
+location. Relevant functions are:
+
+\begin{lstlisting}
+avr_irq_t *
+avr_alloc_irq(
+        avr_irq_pool_t * pool,
+        uint32_t base,
+        uint32_t count,
+        const char ** names /* optional */);
+
+void
+avr_irq_register_notify(
+        avr_irq_t * irq,
+        avr_irq_notify_t notify,
+        void * param);
+
+void
+avr_connect_irq(
+        avr_irq_t * src,
+        avr_irq_t * dst);
+
+void
+avr_raise_irq(
+        avr_irq_t * irq,
+        uint32_t value);
 \end{lstlisting}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{IO}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acfp{VCD}}
