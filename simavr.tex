@@ -616,6 +616,59 @@ the program counter is set to the \ac{ISR} vector. Finally, if
 \section{Cycle Timers}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Cycle timers allow scheduling an event after a certain amount of cycles have
+passed.
+
+\begin{lstlisting}
+typedef avr_cycle_count_t (*avr_cycle_timer_t)(
+        struct avr_t * avr,
+        avr_cycle_count_t when,
+        void * param);
+
+void
+avr_cycle_timer_register(
+        struct avr_t * avr,
+        avr_cycle_count_t when,
+        avr_cycle_timer_t timer,
+        void * param);
+\end{lstlisting}
+
+\lstinline|when| is the minimum count of cycles that must pass until
+\lstinline|timer| is called (\lstinline|param| and \lstinline|when| are passed
+back to \lstinline|timer|\footnote{
+QSimAVR exploits \lstinline|param| to implement
+callbacks to class instances by passing the \lstinline|this| pointer as
+\lstinline|param|.}
+
+Once dispatched, the cycle timer is removed from the list of pending timers. If
+it returns a nonzero value, it is readded to occur at or after that cycle has
+been reached. It is important to realize that it therefore differs from the
+\lstinline|when| argument of \lstinline|avr_cycle_timer_register|, which expects
+a relative cycle count (in contrast to the absolute cycle count returned by the
+callback itself).
+
+The cycle timer system is used during the main loop to determine sleep durations;
+if there are any pending timers, the sleep callback may sleep until the next timer
+is scheduled. Otherwise, a default value of 1000 cycles is returned. \ac{IRQ}s
+and interrupts caused by external events (for example, a ``touch'' event transmitted
+from the simulated touchscreen component) are and can \emph{not} be taken into
+account.
+
+This means that scheduled sleep times will always be simulated to completion by
+\lstinline|avr->sleep|, even if an external event causing \ac{CPU} wakeup is
+triggered immediately after going to sleep.
+Given a situation in which the next scheduled timer is many cycles in the future
+and the \ac{CPU} is currently sleeping, the simulation will become extremely
+unresponsive to external events.
+
+However, in real applications this situation is very unprobable, since
+manual events (which cannot be scheduled through cycle timers) occur very rarely,
+and most applications will have at least some cycle timers with a short period.
+
+It is worth remembering though, that cycle timers are the preferred and most
+accurate method of scheduling interrupts in simavr.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{GDB}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
