@@ -633,27 +633,37 @@ avr_cycle_timer_register(
         void * param);
 \end{lstlisting}
 
-\lstinline|when| is the minimum count of cycles that must pass until
-\lstinline|timer| is called (\lstinline|param| and \lstinline|when| are passed
-back to \lstinline|timer|\footnote{
+In \lstinline|avr_cycle_timer_register|,
+\lstinline|when| is the minimum count of cycles that must pass until the
+\lstinline|timer| callback is executed (\lstinline|param| and \lstinline|when|
+are passed back to \lstinline|timer|\footnote{
 QSimAVR exploits \lstinline|param| to implement
 callbacks to class instances by passing the \lstinline|this| pointer as
 \lstinline|param|.})
 
 Once dispatched, the cycle timer is removed from the list of pending timers. If
-it returns a nonzero value, it is readded to occur at or after that cycle has
-been reached. It is important to realize that it therefore differs from the
+it returns a nonzero value, it is readded to occur \emph{at or after that cycle has
+been reached}. It is important to realize that it therefore differs from the
 \lstinline|when| argument of \lstinline|avr_cycle_timer_register|, which expects
 a relative cycle count (in contrast to the absolute cycle count returned by the
-callback itself).
+callback itself)\footnote{
+%
+Treating the return value of \lstinline|avr_cycle_timer_t| as an absolute value
+and passing the actually scheduled cycle allows for precise handling of recurring
+timers without drift. A system based on relative cycle counts could not guarantee
+accuracy, because simavr does not guarantee cycle timer execution exactly at the
+scheduled point in time.
+}.
 
 The cycle timer system is used during the main loop to determine sleep durations;
 if there are any pending timers, the sleep callback may sleep until the next timer
-is scheduled. Otherwise, a default value of 1000 cycles is returned. \acp{IRQ}
-and interrupts caused by external events (for example, a ``touch'' event transmitted
+is scheduled. Otherwise, a default value of 1000 cycles is returned.
+Besides achieving a runtime behavior similar to execution on a real \ac{AVR}
+processor, sleep is important for lowering simavr \ac{CPU} usage whenever possible.
+
+\acp{IRQ} and interrupts caused by external events (for example, a ``touch'' event transmitted
 from the simulated touchscreen component) are and can \emph{not} be taken into
 account.
-
 This means that scheduled sleep times will always be simulated to completion by
 \lstinline|avr->sleep|, even if an external event causing \ac{CPU} wakeup is
 triggered immediately after going to sleep.
