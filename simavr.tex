@@ -860,12 +860,53 @@ avr_raise_irq(
 \section{\acf{IO}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+% TODO
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acfp{VCD}}
+\section{\acf{VCD} Files}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\ac{VCD} is a simple file format for dumps of signal changes over time. Each file
+consists of a header containing general information (most importantly, the
+used timescale which is always 1ns in \emph{simavr} dumps), variable definitions
+(containing the name and size of each tracked signal), and finally the value
+changes themselves. The following example contains the header section, variable
+definitions, and initial value changes of a three signal \ac{VCD} file generated
+by \emph{simavr}:
+
+\begin{verbatim}
+$timescale 1ns $end
+$scope module logic $end
+$var wire 1 ! <temp.data $end
+$var wire 1 " >temp.data $end
+$var wire 1 # <temp.ddr $end
+$upscope $end
+$enddefinitions $end
+$dumpvars
+0!
+0"
+0#
+$end
+#36072750
+0!
+#36072875
+1"
+1!
+1#
+[...]
+\end{verbatim}
+
+
+\ac{VCD} files can be displayed and analyzed graphically by wave viewers. On Linux,
+\emph{gtkwave} is well suited for this task (see Figure \ref{fig:gtkwave}).
+
+\begin{figure}
+\includegraphics[width=\textwidth]{images/gtkwave}
+\caption{GTKWave}
+\label{fig:gtkwave}
+\end{figure}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Example of an internal module implementation} %TODO
