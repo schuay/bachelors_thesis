@@ -7,13 +7,13 @@
 \chapter{Setup Guide}
 
 This section provides instructions on how to retrieve, compile and install
-simavr and QSimAVR on the GNU/Linux operating system.
+\emph{simavr} and \emph{qsimavr} on the GNU/Linux operating system.
 
-\section{simavr}
+\section{\emph{simavr}}
 
 \subsection{Getting the source code}
 
-The official home of simavr is \url{https://github.com/buserror-uk/simavr}.
+The official home of \emph{simavr} is \url{https://github.com/buserror-uk/simavr}.
 Stable releases are published as git repository tags (direct downloads are
 available at \url{https://github.com/buserror-uk/simavr/tags}). To clone a local
 copy of the repository, run
@@ -28,12 +28,12 @@ git clone git://github.com/buserror-uk/simavr.git
 package may differ from distro to distro. For example, in Ubuntu the required
 package is called \emph{libelf-dev}.
 
-At compile-time, simavr additionally requires \emph{avr-libc} to complete its
+At compile-time, \emph{simavr} additionally requires \emph{avr-libc} to complete its
 built-in AVR core definitions. It is assumed that further standard
 utilities (\emph{git}, \emph{gcc} or \emph{clang}, \emph{make}, etc \ldots) are
 already present.
 
-simavr has been tested with the following software versions:
+\emph{simavr} has been tested with the following software versions:
 
 \begin{itemize}
 \item Arch Linux x86\_64 and i686
@@ -45,11 +45,11 @@ simavr has been tested with the following software versions:
 
 Furthermore, the board\_usb example depends on libusb\_vhci and vhci\_hcd. For
 further details, see \emph{examples/board\_usb/README}. Note however that these
-are not required for a fully working simavr build.
+are not required for a fully working \emph{simavr} build.
 
 \subsection{Compilation and Installation}
 
-simavr's build system relies on standard makefiles. The simplest compilation
+\emph{simavr}'s build system relies on standard makefiles. The simplest compilation
 boils down to the usual
 
 \begin{verbatim}
@@ -90,11 +90,11 @@ Installation is managed through the usual
 make install                                           
 \end{verbatim}
 
-The DESTDIR variable can be used to create a simavr package. DESTDIR=/dest/dir
+The DESTDIR variable can be used to create a \emph{simavr} package. DESTDIR=/dest/dir
 installs to /dest/dir but keeps the package configured to the standard prefix
 (/usr).
 
-For development, we built and installed simavr with the following procedure:
+For development, we built and installed \emph{simavr} with the following procedure:
 
 \begin{verbatim}
 make clean
@@ -103,11 +103,11 @@ make AVR_ROOT=/usr/avr CFLAGS="-O0 -Wall -Wextra -g -fPIC \
 make DESTDIR="/usr" install
 \end{verbatim}
 
-\section{qsimavr}
+\section{\emph{qsimavr}}
 
 \subsection{Getting the source code}
 
-The qsimavr source code is available from
+The \emph{qsimavr} source code is available from
 \url{git://github.com/schuay/qsimavr.git}, with the homepage located at
 \url{https://www.github.com/schuay/qsimavr}. Clone it using
 
@@ -117,10 +117,10 @@ git clone git://github.com/schuay/qsimavr.git
 
 \subsection{Software Dependencies}
 
-Since qsimavr depends on simavr, it shares all of its dependencies. The only
+Since \emph{qsimavr} depends on \emph{simavr}, it shares all of its dependencies. The only
 additional requirements are \emph{qt}, \emph{cmake} and \emph{avr-gcc}.
 
-qsimavr has been tested with
+\emph{qsimavr} has been tested with
 
 \begin{itemize}
 \item Arch Linux x86\_64 and i686
@@ -131,7 +131,7 @@ qsimavr has been tested with
 
 \subsection{Compilation and Installation}
 
-qsimavr follows standard cmake procedure and supports out-of-tree builds. To
+\emph{qsimavr} follows standard cmake procedure and supports out-of-tree builds. To
 generate makefiles, run
 
 \begin{verbatim}
