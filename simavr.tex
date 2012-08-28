@@ -740,7 +740,11 @@ range check takes place in \lstinline|avr_gdb_processor|, which is called
 first during each iteration of the \lstinline|avr_callback_run_gdb| function
 as we have already discussed in section \ref{section:mainloop}.
 
-Watchpoints on the other hand are used to notify the user of accesses to \ac{SRAM}.
+Watchpoints\footnote{Watchpoint support has been added by the author.}
+on the other hand are used to notify the user of accesses to \ac{SRAM}.
+\ac{GDB} uses a fixed offset of \lstinline|0x800000| to reference locations in
+\ac{SRAM}; this offset must be masked out when receiving \ac{GDB} commands, and
+added when sending watchpoint status reports.
 Three types of watchpoints exist: Read watchpoints are triggered by data reads,
 write watchpoints by writes, and access watchpoints by both. Handling of these
 is integrated into the \lstinline|avr_core_watch_write| and
@@ -750,6 +754,16 @@ for a data access, execution is halted, and a status report is sent to \ac{GDB}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acfp{IRQ}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The \acf{IRQ}\footnote{
+%
+Despite the name, \acp{IRQ} have nothing in particular to do with interrupts;
+the interrupt system uses \acp{IRQ}, and \acp{IRQ} may trigger interrupts, but
+they are not strictly linked to each other. Many \ac{IRQ} usages will not involve
+interrupts at all.}
+%
+subsystem provides the message passing mechanism in \emph{simavr}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{IO}}
