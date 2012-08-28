@@ -762,7 +762,46 @@ the interrupt system uses \acp{IRQ}, and \acp{IRQ} may trigger interrupts, but
 they are not strictly linked to each other. Many \ac{IRQ} usages will not involve
 interrupts at all.}
 %
-subsystem provides the message passing mechanism in \emph{simavr}.
+subsystem provides the message passing mechanism in \emph{simavr}. Let's begin
+by examining the main \ac{IRQ} data structures:
+
+\begin{lstlisting}
+typedef struct avr_irq_t {
+    struct avr_irq_pool_t * pool;
+    const char * name;
+    uint32_t            irq;
+    uint32_t            value;
+    uint8_t             flags;
+    struct avr_irq_hook_t * hook;
+} avr_irq_t;
+\end{lstlisting}
+
+An \ac{IRQ} consists of an associated \ac{IRQ} pool, a name (for debugging
+purposes), an ID, its current value, flags, and a list of callback functions.
+The ID (\lstinline|irq|) is when a callback function connected to several \acp{IRQ}
+needs to determine which specific \ac{IRQ} has been raised.
+
+The semantics of \lstinline|value| are not fixed and are specific to each \ac{IRQ};
+for example, \lstinline|ADC_IRQ_ADC0| treats \lstinline|value| as milliVolts,
+while \lstinline|IOPORT_IRQ_PIN0| expects it to equal either 1 (high) or 0 (low).
+\lstinline|flags| is a bitmask of several options\footnote{
+%
+\lstinline|IRQ_FLAG_ALLOC| and \lstinline|IRQ_FLAG_INIT| are of internal interest
+only and not mentioned further.
+%
+}.
+\lstinline|IRQ_FLAG_NOT| flips
+the polarity of the signal (raising an \ac{IRQ} with \lstinline|value| 1 results
+in a \lstinline|value| of 0 and vice versa).
+Setting \lstinline|IRQ_FLAG_FILTERED| instructs \emph{simavr} to ignore \ac{IRQ}
+raises with unchanged values.
+
+\begin{lstlisting}
+typedef void (*avr_irq_notify_t)(
+        struct avr_irq_t * irq,
+        uint32_t value,
+        void * param);
+\end{lstlisting}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
