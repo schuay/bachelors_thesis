@@ -214,7 +214,7 @@ forwarded to all chained \acp{IRQ}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Main Loop} \label{Main Loop}
+\section{Main Loop} \label{section:mainloop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We will now take a closer look at the main loop implementation. Each call to
@@ -346,7 +346,7 @@ such that the next iteration will inform \ac{GDB} and halt the \ac{CPU}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \lstinline|avr_t| struct requires some somple initialization before it is
-ready to be used by the main loop as discussed in section \ref{Main Loop}.
+ready to be used by the main loop as discussed in section \ref{section:mainloop}.
 
 \lstinline|avr_make_mcu_by_name| fills in all details specific to an \ac{MCU}. This
 includes settings such as memory sizes, register locations, available components,
@@ -582,7 +582,7 @@ set, \lstinline|vector| is added to the \lstinline|pending| \ac{FIFO} of
 \lstinline|avr->interrupts|, and a non-zero \lstinline|pending_wait| time is
 ensured. If the \ac{CPU} is currently sleeping, it is woken up.
 
-As we've already covered in section \ref{Main Loop}, servicing interrupts is
+As we've already covered in section \ref{section:mainloop}, servicing interrupts is
 only attempted if the \ac{CPU} is either running or sleeping. Additionally,
 interrupts must be enabled globally in \ac{SREG}, and \lstinline|pending_wait|
 (which is decremented on each \lstinline|avr_service_interrupts| call) must have
