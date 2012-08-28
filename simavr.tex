@@ -342,7 +342,7 @@ such that the next iteration will inform \ac{GDB} and halt the \ac{CPU}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{\lstinline|avr_t| Initialization}
+\subsection{\lstinline|avr_t| Initialization} \label{subsection:avr_t_initialization}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \lstinline|avr_t| struct requires some somple initialization before it is
@@ -687,10 +687,44 @@ A debugger is incredibly useful during program development. Simple programming m
 which can be discovered in minutes using \ac{GDB} can sometimes consume hours
 to find without it.
 
+We have covered how to enable \ac{GDB} support in section
+\ref{subsection:avr_t_initialization}, and when \ac{GDB} handler methods are
+called during the main loop in section \ref{section:mainloop}. In the following,
+we will explain further the methods \emph{simavr} employs to communicate with
+\ac{GDB} and how breakpoints and data watchpoints are implemented. For
+a short guide to debugging \ac{AVR} programs with \ac{GDB}, see section
+\ref{section:debugging}
+
 \emph{simavr} has a fully featured implementation of the \ac{GDB} Remote Serial Protocol,
 which allows it to communicate with \emph{avr-gdb}. A complete reference of
-the protocol can be obtained from the \ac{GDB} manual \cite{gdb}.
+the protocol can be obtained from the \ac{GDB} manual \cite{gdb}. Essentially,
+communication boils down to packets of the format \lstinline|$packet-data#checksum|.
+The packet data itself consists of a command and its arguments. The syntax of
+all commands supported by \emph{simavr} is as follows:
 
+\begin{Verbatim}[samepage=true]
+'?' Indicate the reason the target halted.
+'G XX...' Write general registers.
+'g' Read general registers.
+'p n' Read the value of register n.
+'P n...=r...' Write register n with value r.
+'m addr,length' Read length bytes of memory starting at address
+                addr.
+'M addr,length:XX...' Write length bytes of memory starting
+                      address addr. XX... is the data.
+'c' Continue.
+'s' Step.
+'r' Reset the entire system.
+'z type,addr,kind' Delete break and watchpoints.
+'Z type,addr,kind' Insert break and watchpoints.
+\end{Verbatim}
+
+Many of these commands expect a reply value. This could be a simple as sending
+\verb|"OK"| to confirm successful execution, or it could contain the requested
+data, such as the reply to the \verb|'m'| command.
+
+The packets themselves are sent over an \lstinline|AF_INET|} socket listening
+on the \lstinline|avr->gdb_port|.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
