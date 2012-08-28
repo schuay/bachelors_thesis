@@ -751,6 +751,13 @@ is integrated into the \lstinline|avr_core_watch_write| and
 \lstinline|avr_core_watch_read| functions. Whenever applicable watchpoints exist
 for a data access, execution is halted, and a status report is sent to \ac{GDB}.
 
+Finally, since program crashes often occur unexpectedly, \emph{simavr} helpfully
+provides \ac{GDB} passive mode, which
+opens a \ac{GDB} listening socket whenever an exception occurs if the \ac{GDB}
+port is specified. It is always a good idea to initialize \lstinline|avr->gdb_port| even
+if you have no intention of using \emph{simavr}'s \ac{GDB} features!
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acfp{IRQ}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
