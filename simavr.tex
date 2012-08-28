@@ -5,26 +5,26 @@
 %%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{\emph{simavr} Internals} \label{chapter:simavr}
+\chapter{\simavr Internals} \label{chapter:simavr}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-It is necessary to understand \emph{simavr}'s internals before going on to discuss
-\emph{qsimavr}'s design.
+It is necessary to understand \simavr's internals before going on to discuss
+\qsimavr's design.
 
-\emph{simavr} is a small cross-platform \ac{AVR} simulator written with simplicity and
+\simavr is a small cross-platform \ac{AVR} simulator written with simplicity and
 hackability in mind. It is supported on Linux and OS X, but should run on any
 platform with avr-libc support.
 
-In the following sections, we will take a tour through \emph{simavr} internals\footnote{
-Most, if not all of the code examined in this chapter is taken directly from \emph{simavr}.}.
+In the following sections, we will take a tour through \simavr internals\footnote{
+Most, if not all of the code examined in this chapter is taken directly from \simavr.}.
 Without further delay, let's jump right in and walk through a short demo.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\emph{simavr} Example Walkthrough} \label{section:simavr_example_walkthrough}
+\section{\simavr Example Walkthrough} \label{section:simavr_example_walkthrough}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The following program is taken from the board\_i2ctest \emph{simavr} example. Minor
+The following program is taken from the board\_i2ctest \simavr example. Minor
 modifications have been made to focus on the essential section. Error handling
 is mostly omitted in favor of readability.
 
@@ -90,8 +90,8 @@ firmware into program memory.
 \end{lstlisting}
 
 \lstinline|AVR_IOCTL_TWI_GETIRQ| is a macro to retrieve the internal \ac{IRQ} of the \ac{TWI}
-simulation. \acp{IRQ} are the main method of communication between \emph{simavr} and
-external components and are also used liberally throughout \emph{simavr} internals.
+simulation. \acp{IRQ} are the main method of communication between \simavr and
+external components and are also used liberally throughout \simavr internals.
 Similar macros exist for other important \ac{AVR} parts such as the \ac{ADC}, \ac{IO} ports,
 timers, etc.
 
@@ -101,7 +101,7 @@ timers, etc.
     avr_gdb_init(avr);
 \end{lstlisting}
 
-This section sets up \emph{simavr}'s \ac{GDB} infrastructure to listen on port 1234. The
+This section sets up \simavr's \ac{GDB} infrastructure to listen on port 1234. The
 \ac{CPU} is stopped to allow \ac{GDB} to attach before execution begins.
 
 \begin{lstlisting}
@@ -161,7 +161,7 @@ i2c_eeprom_init(
 \end{lstlisting}
 
 First, the \ac{EEPROM} allocates its own private \acp{IRQ}. The \ac{EEPROM} implementation
-does not know or care to which \emph{simavr} \acp{IRQ} they will be attached. It then
+does not know or care to which \simavr \acp{IRQ} they will be attached. It then
 attaches a callback function (\lstinline|i2c_eeprom_in_hook|) to the \ac{MOSI} \ac{IRQ}. This
 function will be called whenever a value is written to the \ac{IRQ}. The pointer to
 the \ac{EEPROM} state p is passed to each of these callback function calls.
@@ -182,7 +182,7 @@ i2c_eeprom_attach(
 }
 \end{lstlisting}
 
-The private \acp{IRQ} are then attached to \emph{simavr}'s internal \acp{IRQ}. This is called
+The private \acp{IRQ} are then attached to \simavr's internal \acp{IRQ}. This is called
 chaining - all messages raised are forwarded to all chained \acp{IRQ}.
 
 \begin{lstlisting}
@@ -204,7 +204,7 @@ i2c_eeprom_in_hook(
 \end{lstlisting}
 
 Finally, we've reached the \ac{IRQ} callback function. It is responsible for
-simulating communications between \emph{simavr} (acting as the \ac{TWI} master) and the
+simulating communications between \simavr (acting as the \ac{TWI} master) and the
 \ac{EEPROM} (as the \ac{TWI} slave). The \ac{EEPROM} state which was previously passed to
 \lstinline|avr_irq_register_notify| is contained in the \lstinline|param| variable and cast back to
 an \lstinline|i2c_eeprom_t| pointer for further use.
@@ -282,7 +282,7 @@ delay of one instruction.
 \end{lstlisting}
 
 Next, all due cycle timers are processed. Cycle timers are one of the
-most important and heavily used mechanisms in \emph{simavr}. A timer allows scheduling
+most important and heavily used mechanisms in \simavr. A timer allows scheduling
 execution of a callback function once a specific count of execution cycles have
 passed, thus simulating events which occur after a specific amount of time has
 passed. For example, the \lstinline|avr_timer| module uses cycle timers to schedule timer
@@ -352,9 +352,9 @@ ready to be used by the main loop as discussed in section \ref{section:mainloop}
 includes settings such as memory sizes, register locations, available components,
 the default \ac{CPU} frequency, etc \ldots
 
-The \ac{MCU} definitions are located in the simavr/cores subdirectory of the \emph{simavr}
+The \ac{MCU} definitions are located in the simavr/cores subdirectory of the \simavr
 source tree and are compiled conditionally depending on the the local avr-libc
-support. A complete list of locally supported cores is printed by running \emph{simavr}
+support. A complete list of locally supported cores is printed by running \simavr
 without any arguments.
 
 On successful completion, it returns a pointer to the \lstinline|avr_t| struct.
@@ -385,7 +385,7 @@ features which can be embedded directly into the \ac{ELF} file.
 
 The target \ac{MCU}, frequency and voltages can be specified in the \ac{ELF} file by using the
 \lstinline|AVR_MCU| and \lstinline|AVR_MCU_VOLTAGES| macros provided by
-avr\_mcu\_section.h:
+\verb|avr_mcu_section.h|:
 
 \begin{lstlisting}
 #include "avr_mcu_section.h"
@@ -404,11 +404,11 @@ const struct avr_mmcu_vcd_trace_t _mytrace[]  _MMCU_ = {
 };
 \end{lstlisting}
 
-Several predefined commands can be sent from the firmware to \emph{simavr} during program execution.
+Several predefined commands can be sent from the firmware to \simavr during program execution.
 At the time of writing, these include starting and stopping \ac{VCD} traces, and putting
 UART0 into loopback mode. An otherwise unused register must be specified
 to listen for command requests. During execution, writing a command to this
-register will trigger the associated action within \emph{simavr}.
+register will trigger the associated action within \simavr.
 
 \begin{lstlisting}
 AVR_MCU_SIMAVR_COMMAND(&GPIOR0);
@@ -523,7 +523,7 @@ vector table. When an interrupt is serviced, interrupts are disabled globally.
 \subsection{Data Structures}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Let's take a look at how interrupts are represented in \emph{simavr}:
+Let's take a look at how interrupts are represented in \simavr:
 
 \begin{lstlisting}
 typedef struct avr_int_vector_t {
@@ -637,7 +637,7 @@ In \lstinline|avr_cycle_timer_register|,
 \lstinline|when| is the minimum count of cycles that must pass until the
 \lstinline|timer| callback is executed (\lstinline|param| and \lstinline|when|
 are passed back to \lstinline|timer|\footnote{
-\emph{qsimavr} exploits \lstinline|param| to implement
+\qsimavr exploits \lstinline|param| to implement
 callbacks to class instances by passing the \lstinline|this| pointer as
 \lstinline|param|.})
 
@@ -651,7 +651,7 @@ callback itself)\footnote{
 Treating the return value of \lstinline|avr_cycle_timer_t| as an absolute value
 and passing the actually scheduled cycle allows for precise handling of recurring
 timers without drift. A system based on relative cycle counts could not guarantee
-accuracy, because \emph{simavr} does not guarantee cycle timer execution exactly at the
+accuracy, because \simavr does not guarantee cycle timer execution exactly at the
 scheduled point in time.
 }.
 
@@ -659,7 +659,7 @@ The cycle timer system is used during the main loop to determine sleep durations
 if there are any pending timers, the sleep callback may sleep until the next timer
 is scheduled. Otherwise, a default value of 1000 cycles is returned.
 Besides achieving a runtime behavior similar to execution on a real \ac{AVR}
-processor, sleep is important for lowering \emph{simavr} \ac{CPU} usage whenever possible.
+processor, sleep is important for lowering \simavr \ac{CPU} usage whenever possible.
 
 \acp{IRQ} and interrupts caused by external events (for example, a ``touch'' event transmitted
 from the simulated touchscreen component) are and can \emph{not} be taken into
@@ -676,7 +676,7 @@ manual events (which cannot be scheduled through cycle timers) occur very rarely
 and most applications will have at least some cycle timers with a short period.
 
 It is worth remembering though, that cycle timers are the preferred and most
-accurate method of scheduling interrupts in \emph{simavr}.
+accurate method of scheduling interrupts in \simavr.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -690,17 +690,17 @@ to find without it.
 We have covered how to enable \ac{GDB} support in section
 \ref{subsection:avr_t_initialization}, and when \ac{GDB} handler methods are
 called during the main loop in section \ref{section:mainloop}. In the following,
-we will explain further the methods \emph{simavr} employs to communicate with
+we will explain further the methods \simavr employs to communicate with
 \ac{GDB} and how breakpoints and data watchpoints are implemented. For
 a short guide to debugging \ac{AVR} programs with \ac{GDB}, see section
 \ref{section:debugging}
 
-\emph{simavr} has a fully featured implementation of the \ac{GDB} Remote Serial Protocol,
+\simavr has a fully featured implementation of the \ac{GDB} Remote Serial Protocol,
 which allows it to communicate with \emph{avr-gdb}. A complete reference of
 the protocol can be obtained from the \ac{GDB} manual \cite{gdb}. Essentially,
 communication boils down to packets of the format \lstinline|$packet-data#checksum|.
 The packet data itself consists of a command and its arguments. The syntax of
-all commands supported by \emph{simavr} is as follows:
+all commands supported by \simavr is as follows:
 
 \begin{Verbatim}[samepage=true]
 '?' Indicate the reason the target halted.
@@ -751,11 +751,11 @@ is integrated into the \lstinline|avr_core_watch_write| and
 \lstinline|avr_core_watch_read| functions. Whenever applicable watchpoints exist
 for a data access, execution is halted, and a status report is sent to \ac{GDB}.
 
-Finally, since program crashes often occur unexpectedly, \emph{simavr} helpfully
+Finally, since program crashes often occur unexpectedly, \simavr helpfully
 provides \ac{GDB} passive mode, which
 opens a \ac{GDB} listening socket whenever an exception occurs if the \ac{GDB}
 port is specified. It is always a good idea to initialize \lstinline|avr->gdb_port| even
-if you have no intention of using \emph{simavr}'s \ac{GDB} features!
+if you have no intention of using \simavr's \ac{GDB} features!
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -769,7 +769,7 @@ the interrupt system uses \acp{IRQ}, and \acp{IRQ} may trigger interrupts, but
 they are not strictly linked to each other. Many \ac{IRQ} usages will not involve
 interrupts at all.}
 %
-subsystem provides the message passing mechanism in \emph{simavr}. Let's begin
+subsystem provides the message passing mechanism in \simavr. Let's begin
 by examining the main \ac{IRQ} data structures:
 
 \begin{lstlisting}
@@ -800,7 +800,7 @@ only and not mentioned further.
 \lstinline|IRQ_FLAG_NOT| flips
 the polarity of the signal (raising an \ac{IRQ} with \lstinline|value| 1 results
 in a \lstinline|value| of 0 and vice versa).
-Setting \lstinline|IRQ_FLAG_FILTERED| instructs \emph{simavr} to ignore \ac{IRQ}
+Setting \lstinline|IRQ_FLAG_FILTERED| instructs \simavr to ignore \ac{IRQ}
 raises with unchanged values.
 
 \lstinline|hook| contains a linked list of chained \acp{IRQ} and
@@ -823,9 +823,9 @@ Callbacks are executed whenever an \ac{IRQ} is raised (and is not filtered).
 Chained \acp{IRQ} are raised whenever the \ac{IRQ} they are connected to is raised.
 
 As briefly mentioned in section \ref{section:simavr_example_walkthrough}, module
-implementations usually structure communication with the \emph{simavr} core by
+implementations usually structure communication with the \simavr core by
 allocating their own private \acp{IRQ}, which are then connected to the target
-\emph{simavr} \acp{IRQ}. Callbacks are registered on private \acp{IRQ};
+\simavr \acp{IRQ}. Callbacks are registered on private \acp{IRQ};
 likewise, only private \acp{IRQ} are raised. This
 ensures maximum flexibility since \ac{IRQ} connections are defined in one single
 location. Relevant functions are:
@@ -869,11 +869,11 @@ avr_raise_irq(
 
 \ac{VCD} is a simple file format for dumps of signal changes over time. Each file
 consists of a header containing general information (most importantly, the
-used timescale which is always 1ns in \emph{simavr} dumps), variable definitions
+used timescale which is always 1ns in \simavr dumps), variable definitions
 (containing the name and size of each tracked signal), and finally the value
 changes themselves. The following example contains the header section, variable
 definitions, and initial value changes of a three signal \ac{VCD} file generated
-by \emph{simavr}:
+by \simavr:
 
 \begin{verbatim}
 $timescale 1ns $end
@@ -907,10 +907,10 @@ $end
 \label{fig:gtkwave}
 \end{figure}
 
-The \emph{simavr} \ac{VCD} implementation uses a combination of cycle timers
+The \simavr \ac{VCD} implementation uses a combination of cycle timers
 and \acp{IRQ} to track signal\footnote{
 %
-In \emph{simavr}, each tracked signal is actually an \ac{IRQ}.
+In \simavr, each tracked signal is actually an \ac{IRQ}.
 %
 } changes. After initializing an \lstinline|avr_vcd_t|
 with \lstinline|avr_vcd_init|, tracked signals are configured by calling
@@ -935,7 +935,7 @@ firmware itself.
 \section{Core Definitions}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The actual core definitions used by \emph{simavr} are located in the
+The actual core definitions used by \simavr are located in the
 \verb|simavr/cores| subdirectory of the source tree. These definitions rely on
 \emph{avr-libc} headers to specify the internal structure of an \ac{MCU} needed
 for simulation.
@@ -1016,8 +1016,8 @@ Adding a new \ac{MCU} definition is a simple matter of creating a new \verb|sim_
 file in \verb|simavr/cores| and defining all included components with the help
 of \emph{avr-libc} and a datasheet.
 
-This concludes our tour of the \emph{simavr} core modules. You should now have a
-good idea of how \emph{simavr} internals work together and complement each
+This concludes our tour of the \simavr core modules. You should now have a
+good idea of how \simavr internals work together and complement each
 other to create an \ac{AVR} simulation which is accurate, reliable, yet simple,
 efficient, and easy to extend.
 
