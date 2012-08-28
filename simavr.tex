@@ -261,7 +261,7 @@ We have now reached the actual execution of the current instruction. If the \ac{
 is currently running, \lstinline|avr_run_one| decodes the instruction located in flash memory
 (\lstinline|avr->flash|) and triggers all necessary actions. This can include setting the \ac{CPU}
 state (SLEEP), updating the status register \ac{SREG}, writing or reading from memory
-locations, altering the program counter PC, etc \ldots
+locations, altering the \ac{PC}, etc \ldots
 
 Finally, the cycle counter (\lstinline|avr->cycle|) is updated and the new
 program counter is returned.
@@ -721,11 +721,31 @@ all commands supported by \emph{simavr} is as follows:
 
 Many of these commands expect a reply value. This could be a simple as sending
 \verb|"OK"| to confirm successful execution, or it could contain the requested
-data, such as the reply to the \verb|'m'| command.
+data, such as the reply to the \verb|'m'| command. A single reply can chain
+several data fields. For example, whenever a watchpoint is hit, the reply contains
+the signal the program received (\lstinline|0x05| represents the ``trap'' signal),
+the \ac{SREG}, \ac{SP}, and \ac{PC} values, the type of watchpoint which was hit
+(either \verb|"awatch"|, \verb|"watch"|, or \verb|"rwatch"|), and the watchpoint
+address.
 
-The packets themselves are sent over an \lstinline|AF_INET|} socket listening
+The packets themselves are received and sent over an \lstinline|AF_INET|} socket listening
 on the \lstinline|avr->gdb_port|.
 
+Both watchpoints and breakpoints are stored within an \lstinline|avr_gdb_watchpoints_t|
+struct in \lstinline|avr->gdb| and are limited to 32 active instances of each.
+Breakpoints are set at a particular location in flash memory. Whenever the \ac{PC}
+reaches that that point, execution is halted, a status report containing a summary
+of current register values is sent, and control is passed to \ac{GDB}. This
+range check takes place in \lstinline|avr_gdb_processor|, which is called
+first during each iteration of the \lstinline|avr_callback_run_gdb| function
+as we have already discussed in section \ref{section:mainloop}.
+
+Watchpoints on the other hand are used to notify the user of accesses to \ac{SRAM}.
+Three types of watchpoints exist: Read watchpoints are triggered by data reads,
+write watchpoints by writes, and access watchpoints by both. Handling of these
+is integrated into the \lstinline|avr_core_watch_write| and
+\lstinline|avr_core_watch_read| functions. Whenever applicable watchpoints exist
+for a data access, execution is halted, and a status report is sent to \ac{GDB}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acfp{IRQ}}
