@@ -4,6 +4,7 @@ PROJECT = thesis
 protocol:
 #------------------------------------------------------------------------------
 	latex $(PROJECT)
+	bibtex $(PROJECT)
 	latex $(PROJECT)
 	dvips -o $(PROJECT).ps $(PROJECT).dvi
 	ps2pdf $(PROJECT).ps $(PROJECT).pdf
