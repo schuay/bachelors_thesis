@@ -60,7 +60,7 @@ current cycle count, callbacks for various tasks, pending interrupts, and more.
 is used to dump the level changes of desired pins (or \ac{IRQ}'s in general) into a
 file which can be subsequently viewed using utilities such as \emph{gtkwave}.
 
-ee contains the internal state of the simulated external \ac{EEPROM}.
+\lstinline|ee| contains the internal state of the simulated external \ac{EEPROM}.
 
 \begin{lstlisting}
 int main(int argc, char *argv[])
@@ -80,8 +80,9 @@ information have been embedded into the binary and are therefore available in
     avr_load_firmware(avr, &f);
 \end{lstlisting}
 
-The \lstinline|avr_t| instance is then constructed from the core file of the specified
-\ac{MCU}, and initialized. The firmware is then copied into the program memory.
+The \lstinline|avr_t| instance is then constructed from the core file of the
+specified \ac{MCU} and initialized. \lstinline|avr_load_firmware| copies the
+firmware into program memory.
 
 \begin{lstlisting}
     i2c_eeprom_init(avr, &ee, 0xa0, 0xfe, NULL, 1024);
@@ -161,7 +162,7 @@ i2c_eeprom_init(
 
 First, the \ac{EEPROM} allocates its own private \ac{IRQ}s. The \ac{EEPROM} implementation
 does not know or care to which simavr \ac{IRQ}'s they will be attached. It then
-attaches a callback function (\lstinline|i2c_eeprom_in_hook|) to the MOSI \ac{IRQ}. This
+attaches a callback function (\lstinline|i2c_eeprom_in_hook|) to the \ac{MOSI} \ac{IRQ}. This
 function will be called whenever a value is written to the \ac{IRQ}. The pointer to
 the \ac{EEPROM} state p is passed to each of these callback function calls.
 
@@ -205,7 +206,7 @@ i2c_eeprom_in_hook(
 Finally, we've reached the \ac{IRQ} callback function. It is responsible for
 simulating communications between simavr (acting as the \ac{TWI} master) and the
 \ac{EEPROM} (as the \ac{TWI} slave). The \ac{EEPROM} state which was previously passed to
-\lstinline|avr_irq_register_notify| is contained in the param variable and cast back to
+\lstinline|avr_irq_register_notify| is contained in the \lstinline|param| variable and cast back to
 an \lstinline|i2c_eeprom_t| pointer for further use.
 
 Outgoing messages are sent by raising the internal \ac{IRQ}. This message is then
@@ -345,7 +346,7 @@ such that the next iteration will inform \ac{GDB} and halt the \ac{CPU}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \lstinline|avr_t| struct requires some somple initialization before it is
-ready to by used by the main loop as discussed in the previous section.
+ready to be used by the main loop as discussed in section \ref{Main Loop}.
 
 \lstinline|avr_make_mcu_by_name| fills in all details specific to an \ac{MCU}. This
 includes settings such as memory sizes, register locations, available components,
@@ -403,7 +404,7 @@ const struct avr_mmcu_vcd_trace_t _mytrace[]  _MMCU_ = {
 };
 \end{lstlisting}
 
-Several predefined can be sent from the firmware to simavr during program execution.
+Several predefined commands can be sent from the firmware to simavr during program execution.
 At the time of writing, these include starting and stopping \ac{VCD} traces, and putting
 UART0 into loopback mode. An otherwise unused register must be specified
 to listen for command requests. During execution, writing a command to this
@@ -436,8 +437,8 @@ int main() {
 
 Usually, UART0 is used for this purpose. The simplest debug output can be achieved
 by binding \lstinline|stdout| to \lstinline|UART0| as described by the avr-libc
-documentation \cite{libc}, and then using \lstinline|printf| and co. This alternate console
-output is provided in case using UART0 is not possible or desired.
+documentation \cite{libc}, and then using \lstinline|printf| and similar functions.
+This alternate console output is provided in case using UART0 is not possible or desired.
 
 
 
