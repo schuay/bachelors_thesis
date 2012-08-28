@@ -370,7 +370,7 @@ Further settings can now be applied manually (typical candidates are logging and
 tracing levels).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Firmware}
+\subsection{Firmware} \label{subsection:initialization_firmware}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We now have a fully initialized \lstinline|avr_t| struct and are ready to load
@@ -907,13 +907,118 @@ $end
 \label{fig:gtkwave}
 \end{figure}
 
+The \emph{simavr} \ac{VCD} implementation uses a combination of cycle timers
+and \acp{IRQ} to track signal\footnote{
+%
+In \emph{simavr}, each tracked signal is actually an \ac{IRQ}.
+%
+} changes. After initializing an \lstinline|avr_vcd_t|
+with \lstinline|avr_vcd_init|, tracked signals are configured by calling
+\lstinline|avr_vcd_add_signal|. This connects an internal \ac{IRQ}\footnote{
+Limited to 32 connections.} to the tracked signal, which has
+\lstinline|_avr_vcd_notify| registered as a callback function. The latter is
+called whenever a tracked signal changes, and registers the updated value, the
+current cycle, and the source \ac{IRQ} in its log.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Example of an internal module implementation} %TODO
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Accumulated log data is flushed periodically by a cycle timer, the period of
+which is specified on \lstinline|avr_vcd_t initialization|. When a large amount
+is produced on the tracked signals, it may be necessary to decrease the used
+period to avoid log overflows.
+
+Tracking can be started and stopped at any time during program execution by
+calling \lstinline|avr_vcd_start| and \lstinline|avr_vcd_stop|. As explained in
+section \ref{subsection:initialization_firmware}, this can even be triggered from the
+firmware itself.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Core Definitions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The actual core definitions used by \emph{simavr} are located in the
+\verb|simavr/cores| subdirectory of the source tree. These definitions rely on
+\emph{avr-libc} headers to specify the internal structure of an \ac{MCU} needed
+for simulation.
+
+The core and all internal components (such as timers, \acp{UART}, \ac{IO} ports,
+\acp{ADC}, \acp{SPI}, etc \ldots) are defined in an internal struct using struct
+set initialization for a terse representation. The \lstinline|avr_t| initialization
+of the \verb|atmega1280| therefore clocks in at only a couple of lines:
+
+\begin{lstlisting}
+.core = {
+    .mmcu = "atmega1280",
+    DEFAULT_CORE(4),
+
+    .init = m1280_init,
+    .reset = m1280_reset,
+
+    .rampz = RAMPZ,
+},
+\end{lstlisting}
+
+\lstinline|DEFAULT_CORE|\footnote{
+%
+The argument specifies the vector size.
+%
+} initializes basic parameters included in \emph{avr-libc}
+headers for every \ac{MCU} such as \lstinline|RAMEND|, \lstinline|FLASHEND|,
+etc \ldots). The \lstinline|init| and \lstinline|reset| members point to callbacks
+which are used to (obviously) initialize and reset the \ac{MCU}.
+
+Internal components are connected to the \lstinline|avr_t| core in the
+\lstinline|init| function:
+
+\begin{lstlisting}
+void m1280_init(struct avr_t * avr)
+{
+    struct mcu_t * mcu = (struct mcu_t*)avr;
+
+    avr_eeprom_init(avr, &mcu->eeprom);
+    avr_flash_init(avr, &mcu->selfprog);
+    avr_extint_init(avr, &mcu->extint);
+    avr_watchdog_init(avr, &mcu->watchdog);
+    avr_ioport_init(avr, &mcu->porta);
+
+    /* [...] */
+}
+\end{lstlisting}
+
+A short excerpt of \verb|atmega1280|'s \lstinline|TIMER0| initialization should
+throw some light on how components are configured. Notice how all register and
+bit locations rely on \emph{avr-libc} definitions:
+
+\begin{lstlisting}
+.timer0 = {
+    .name = '0',
+    .wgm = { AVR_IO_REGBIT(TCCR0A, WGM00), AVR_IO_REGBIT(TCCR0A, WGM01), AVR_IO_REGBIT(TCCR0B, WGM02) },
+    .wgm_op = {
+        [0] = AVR_TIMER_WGM_NORMAL8(),
+        [2] = AVR_TIMER_WGM_CTC(),
+        [3] = AVR_TIMER_WGM_FASTPWM8(),
+        [7] = AVR_TIMER_WGM_OCPWM(),
+    },
+    .cs = { AVR_IO_REGBIT(TCCR0B, CS00), AVR_IO_REGBIT(TCCR0B, CS01), AVR_IO_REGBIT(TCCR0B, CS02) },
+    .cs_div = { 0, 0, 3 /* 8 */, 6 /* 64 */, 8 /* 256 */, 10 /* 1024 */ },
+
+    .r_tcnt = TCNT0,
+
+    .overflow = {
+        .enable = AVR_IO_REGBIT(TIMSK0, TOIE0),
+        .raised = AVR_IO_REGBIT(TIFR0, TOV0),
+        .vector = TIMER0_OVF_vect,
+    },
+    /* ... */
+}
+\end{lstlisting}
+
+Adding a new \ac{MCU} definition is a simple matter of creating a new \verb|sim_*.c|
+file in \verb|simavr/cores| and defining all included components with the help
+of \emph{avr-libc} and a datasheet.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Example of an internal module implementation} %TODO
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%
