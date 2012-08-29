@@ -218,7 +218,7 @@ forwarded to all chained \acp{IRQ}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Main Loop} \label{section:mainloop}
+\section{The Main Loop} \label{section:mainloop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We will now take a closer look at the main loop implementation. Each call to
@@ -684,7 +684,7 @@ accurate method of scheduling interrupts in \simavr.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{GDB}}
+\section{\acf{GDB} Support}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A debugger is incredibly useful during program development. Simple programming mistakes
@@ -870,6 +870,10 @@ are accessed, and on the other the \lstinline|avr_io_t| infrastructure, which
 provides unified access to module \acp{IRQ}, reset and deallocation callbacks,
 and a \ac{IOCTL} system.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{\acf{IO} Register Callbacks}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 We will examine the \ac{IO} register callback system first. Whenever the \simavr
 core reads or writes an \ac{IO} register during instruction processing (see section
 \ref{section:instruction_processing}), it first checks if a callback exists for
@@ -925,10 +929,16 @@ Callbacks are registered using the function duo of \lstinline|avr_register_io_wr
 and \lstinline|avr_register_io_read|. \acp{IRQ} are created on-demand whenever
 the \lstinline|avr_iomem_getirq| function is called.
 
-The included \simavr modules (files beginning with the \verb|avr_| prefix)
+The included \simavr modules (implemented in files beginning with the \verb|avr_| prefix)
 provide many practical examples of \ac{IO} callback usage; for example,
 the \verb|avr_timer| module uses \ac{IO} callbacks to start the timer when
 a clock source is enabled through the timer registers.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{The \lstinline|avr_io_t| Module}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{VCD} Files}
