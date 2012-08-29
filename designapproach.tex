@@ -7,4 +7,83 @@
 Having covered \simavr in-depth, we now turn our attention to the program developed
 during the course of this thesis, namely \qsimavr.
 
-Plugin based, small core, threaded, ...
+\section{Project Outline} \label{section:project_outline}
+
+The aim was to provide an application that could facilitate easy, reliable and
+useful simulation not only of the \ac{AVR} core, but also of various external
+components (such as \ac{LCD} displays) and their interactions. Specifically,
+the following set of components should be simulated for the \verb|atmega1280|
+\ac{MCU}, roughly based on the BIGAVR6 board by MikroElektronika\footnote{
+%
+http://www.mikroe.com/products/view/322/bigavr6-development-system/
+%
+}:
+
+\begin{itemize}
+\item A standard 2x16 character \ac{LCD} display based on the HD44780 chip
+\item An external 1 Kbit \ac{EEPROM} connected to the \ac{MCU} via \ac{TWI}
+\item A DS1820 Temperature Sensor using 1-wire communication
+\item The DS1307 \ac{RTC}, also connected via \ac{TWI}
+\item All \acp{LED} connected to \verb|PORT| pins
+\item Likewise, all push buttons connected to \verb|PORT| pins
+\item A 128x64 Graphic \ac{LCD} display containing two chips based on the NT7108 controller
+\item A touch-sensitive panel (usually attached to the \ac{GLCD}
+\end{itemize}
+
+The MMC/SDcard reader which is present on the BIGAVR6 board as well as
+other external components\footnote{
+%
+Among others, the SmartMP3 board, a Serial Ethernet board, a \ac{UART} based
+Bluetooth board, and an external MMC/SDcard reader.
+%
+} used by the Microcontroller course at the Technical
+University of Vienna are currently \emph{not} included (these are all good
+candidates for further work though).
+
+These components should be simple to connect and disconnect from a running \ac{AVR}
+simulation. They should also offer development assistance in the form of \ac{VCD}
+optional traces of relevant signals. Graphical output of component state should
+be presented to the user, and user input should be forwarded to the simulation.
+
+The frontend should offer at least rudimentary control of firmware
+loading, \ac{GDB} connection and simulation execution.
+
+Additionally, bonus points are rewarded for cross-platform compatibility and
+easy extensibility with new components.
+
+\section{Design Decisions} \label{section:design_principles}
+
+To satisfy the requirements stated in section \ref{section:project_outline},
+we settled on a plugin based design with a small core handling the simulation main
+loop and components loaded from external shared libraries.
+
+The implementation language of choice was C++, both for the sake of familiarity
+and because interfacing C code with C++ applications is extremely simple and
+robust.
+
+Qt\footnote{
+%
+\url{http://qt.nokia.com/products} (Qt is currently in the process of begin sold
+to Digia, don't expect this link to stay valid for long.)
+%
+} was used as the \ac{GUI} toolkit. It is widely used, distributed and installed
+by default on most Linux systems. Qt also has great cross-platform compatibility,
+and as such \qsimavr should be very simple to port to any other platform that
+is supported by both \simavr and Qt. The signal and slot paradigm employed by
+Qt is very well suited to \ac{GUI} programming, and the
+QGraphicsScene/QGraphicsView classes are very pleasant to use for more advanced
+drawing and \ac{IO} tasks. Finally, QtCreator\footnote{
+%
+\url{http://qt.nokia.com/products/developer-tools/}
+%
+} is a personal favorite \ac{IDE} of
+the author, which also works well with cmake.
+
+The build system of our choice is cmake\footnote{\url{http://www.cmake.org/}}.
+Again, it provides great cross-platform
+compatibility and ease of use. Standard Qt specific macros (such as .ui file and
+QOBJECT preprocessing handling) are available. Similar to most build tools, cmake
+saves compilation time by only compiling needed (changed) files. It also handles
+installation of the application after compilation. For further details, see
+section \ref{section:setup_qsimavr} and the official cmake documentation at
+\url{http://www.cmake.org/cmake/help/documentation.html}.
