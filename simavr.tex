@@ -1220,12 +1220,10 @@ of \emph{avr-libc} and a datasheet.
 This concludes our tour of the \simavr core modules. You should now have a
 good idea of how \simavr internals work together and complement each
 other to create an \ac{AVR} simulation which is accurate, reliable, yet simple,
-efficient, and easy to extend.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Example of an internal module implementation} %TODO
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+efficient, and easy to extend. For an example of all of these concepts in practice,
+take a look at the modules included with \simavr. A good example is the \verb|avr_eeprom|
+module, which uses a combination of interrupts, an \lstinline|avr_io_t| module,
+and \ac{IO} access callbacks to achieve the desired functionality.
 
 %%
 %% = eof =====================================================================
