@@ -909,7 +909,10 @@ Read accesses are very similar, except that (somewhat counter-intuitively), the 
 by the callback is automatically written to \lstinline|avr->data|.
 
 Access callbacks plus associated \lstinline|IOMEM| \acp{IRQ} are stored
-in the \lstinline|avr->io| array:
+in the \lstinline|avr->io| array. \lstinline|MAX_IOs| is currently set to
+\lstinline|279|, enough to handle all used \ac{IO} registers on \acp{AVR} like
+the \verb|atmega1280|, which go up to an address of \lstinline|0x136|\footnote{
+\lstinline|279| $=$ \lstinline|0x136| $-$ \lstinline|0x20| $+$ \lstinline|0x01|}.
 
 \begin{lstlisting}
 struct {
