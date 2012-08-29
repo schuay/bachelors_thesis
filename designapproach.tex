@@ -36,8 +36,7 @@ other external components\footnote{
 Among others, the SmartMP3 board, a Serial Ethernet board, a \ac{UART} based
 Bluetooth board, and an external MMC/SDcard reader.
 %
-} used by the Microcontroller course at the Technical
-University of Vienna are currently \emph{not} included (these are all good
+} used by the Microcontroller course at the \ac{TU} Vienna are currently \emph{not} included (these are all good
 candidates for further work though).
 
 These components should be simple to connect and disconnect from a running \ac{AVR}
@@ -82,8 +81,51 @@ the author, which also works well with cmake.
 The build system of our choice is cmake\footnote{\url{http://www.cmake.org/}}.
 Again, it provides great cross-platform
 compatibility and ease of use. Standard Qt specific macros (such as .ui file and
-QOBJECT preprocessing handling) are available. Similar to most build tools, cmake
+\lstinline|QObject| preprocessing handling) are available. Similar to most build tools, cmake
 saves compilation time by only compiling needed (changed) files. It also handles
 installation of the application after compilation. For further details, see
 section \ref{section:setup_qsimavr} and the official cmake documentation at
 \url{http://www.cmake.org/cmake/help/documentation.html}.
+
+QsLog\footnote{\url{https://bitbucket.org/razvanpetru/qt-components/wiki/QsLog}}
+was chosen as the logging framework for its simplicity. Currently, logging is done
+to the console only, but a log file is very simple to implement.
+
+The alternative to the chosen software ecosystem was the obvious choice of
+staying close to the example component implementations included with \simavr;
+namely, C code with graphical components relying on Freeglut\footnote{
+%
+\url{http://freeglut.sourceforge.net/}
+%
+}, a thin layer on top of OpenGl. However, it was clear from the start that
+standard (and not-so-standard) elements such as menus, toolbars, and \ac{MDI}
+windows would needed. These widgets are provided out of the box by Qt, and
+would have taken an infeasable amount of time with a low level library such as
+Freeglut. While the original plan was to write the \qsimavr core in C++ but keep
+components in C, it turned out to feel more natural to implement entirely in C++.
+
+Every Qt application has a main thread where the \ac{GUI} lives. The \simavr
+simulation main loop runs in a separate \lstinline|QThread| and communicates
+with the Qt main thread by using queued signal delivery to avoid threading
+problems. The introduced latency is not detrimental to the application's purpose.
+
+Components are implemented as plugins. They adhere to a standard interface and
+can be loaded at runtime. This ensures easy extensibility; the component interface
+is fixed and publicly available. New plugins can be created and loaded easily by
+third parties without requiring bundled distribution with \qsimavr. Additionally,
+the use of a plugin architecture forces strict separation between both
+the components themselves, and between components and the core.
+
+Each component consists of a mandatory logic and an optional \ac{GUI} part.
+The logic part executes in the \simavr thread and again uses queued signals
+to communicate with the \ac{GUI} part living in the main Qt thread. User input
+is passed from the \ac{GUI} to the logic handler, and display information in the
+other direction.
+
+It would be ideal to have flexible wiring between the components and the core.
+Some of the standard BIGAVR6 components can be configured to connect to different
+pins using dip-switches; the connection of external components is completely
+undefined. \acp{MCU} also differ in the pins they have available. However,
+component wiring in \qsimavr is currently hardcoded. This allows plugin management
+to boil down to a simple on/off switch. Wirings are configured for the BIGAVR6
+board used in the \ac{TU} Vienna Microcontroller course.
