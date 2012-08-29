@@ -944,7 +944,25 @@ a clock source is enabled through the timer registers.
 
 The \lstinline|avr_io_t| infrastructure provides additional functionality to
 modules, including reset and deallocation callbacks, central \ac{IRQ} handling,
-and a \ac{IOCTL} function.
+and a \ac{IOCTL} function. The full struct reference is provided here for reference:
+
+\begin{lstlisting}
+typedef struct avr_io_t {
+    struct avr_io_t *   next;
+    avr_t *             avr;
+    const char *        kind;
+
+    const char ** irq_names;
+
+    uint32_t            irq_ioctl_get;
+    int                 irq_count;
+    struct avr_irq_t *  irq;
+
+    void (*reset)(struct avr_io_t *io);
+    int (*ioctl)(struct avr_io_t *io, uint32_t ctl, void *io_param);
+    void (*dealloc)(struct avr_io_t *io);
+} avr_io_t;
+\end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Initialization in the \lstinline|avr_ioport| Module}
@@ -1017,12 +1035,33 @@ registers as discussed in section \ref{subsection:io_register_callbacks}.
 \subsubsection{Implementation Overview}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\acp{IOCTL} provide a way to trigger arbitrary functionality in modules. Whenever
+\acp{IOCTL} provide a way to trigger arbitrary functionality\footnote{
+%
+For example, the \lstinline|avr_ioport|
+module uses the \ac{IOCTL} system to allow extracting the state of a particular port's
+\lstinline|PORT|, \lstinline|PIN|, and \lstinline|DDR| registers; \lstinline|avr_eeprom|
+allows getting and setting memory locations.
+%
+} in modules. Whenever
 a \ac{IOCTL} is triggered by calling \lstinline|avr_ioctl|, the \ac{IOCTL} handler
 of all modules registered in the \lstinline|avr->io_port| linked list is called
 in sequence until one responds to that particular command by returning a value
 other than \lstinline|-1|. This is then returned to the caller.
 
+The reset handler is called whenever \lstinline|avr_reset| is called, allowing
+the module to do react appropriately. In \qsimavr, a major reason for registering
+as a \lstinline|avr_io_t| module was to recreate cycle timers and restart \ac{VCD}
+traces.
+
+If a module allocates resources, these can be freed during the deallocation handler.
+
+Finally, \lstinline|avr_io_getirq| lets a module ``publish'' its \acp{IRQ} for
+use by other modules or applications built on top of \simavr. This function is
+used whenever a \qsimavr component is connected to \simavr modules:
+
+\begin{lstlisting}
+avr_connect_irq(avr_io_getirq(avr, AVR_IOCTL_IOPORT_GETIRQ(PORT), PIN), irq + IRQ_TEMP_DQ);
+\end{lstlisting}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
