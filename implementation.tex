@@ -487,7 +487,7 @@ and time bytes. Handling of leap years is simplified by relying on Qt's
 The square wave pin of the actual component is \emph{not} implemented.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{GLCD} Component}
+\section{\acf{GLCD} Component} \label{section:component_glcd}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \ac{GLCD} component simulates a 128x64 Graphic \ac{LCD} display, based internally
@@ -537,7 +537,7 @@ By ``read operation'', we mean that the \ac{AVR} core wants to read from
 the \ac{GLCD} component.
 %
 }, we queue a cycle timer which will write the requested data to the data pins
-upon completion of 320 ns data delay time. Note that display read data first passes an
+upon completion of 320 \ac{ns} data delay time. Note that display read data first passes an
 intermediate read buffer before it is actually output to the data pins. This
 simulates latching data into the output register which actually occurs in the real
 hardware\footnote{
@@ -573,27 +573,150 @@ the coordinates are reset to the neutral lower-left corner.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{LCD} Component}
+\section{\acf{LCD} Component} \label{section:component_lcd}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This component simulates a 2x16 hardware \ac{LCD} display based on the HD44780
-chip \cite{hitachi01, samsung02, winstar02}.
+This component simulates a 2x16 \ac{LCD} display based on the HD44780
+chip \cite{hitachi01, samsung02, winstar02}. A substantial part of the implementation
+was taken from the \verb|hd44780| example part included with \simavr.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|l}
+
+Pin/\ac{IRQ}        & Function \\
+
+\hline
+
+PORTC4-7            & Data Pins\\
+PORTC2              & \acf{RS}\\
+PORTC3              & \acf{E}
+
+\end{tabular}
+\caption{\ac{LCD} Wiring}
+\label{tab:wiring_glcd}
+\end{table}
+
+Communication is very similar to the \ac{GLCD} exmined in section
+\ref{section:component_glcd} and will not be discussed further in this section.
+Font selection, custom fonts and cursor display are not implemented, allowing us to use
+a simple \lstinline|QTextBrowser| to display \ac{LCD} output.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acfp{LED} \& Buttons Component}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+The 86 buttons and \acp{LED} of the BIGAVR6 board are bundled into this simple
+component.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|l}
+
+Pin/\ac{IRQ}        & Function \\
+
+\hline
+
+PORTA0-7            & \acp{LED} \& Buttons\\
+PORTB0-7            & \acp{LED} \& Buttons\\
+PORTC0-7            & \acp{LED} \& Buttons\\
+PORTD0-7            & \acp{LED} \& Buttons\\
+PORTE0-7            & \acp{LED} \& Buttons\\
+PORTF0-7            & \acp{LED} \& Buttons\\
+PORTG0-5            & \acp{LED} \& Buttons\\
+PORTH0-7            & \acp{LED} \& Buttons\\
+PORTJ0-7            & \acp{LED} \& Buttons\\
+PORTK0-7            & \acp{LED} \& Buttons\\
+PORTL0-7            & \acp{LED} \& Buttons
+
+\end{tabular}
+\caption{\acp{LED} \& Buttons Wiring}
+\label{tab:wiring_glcd}
+\end{table}
+
+Each \lstinline|QPushButton| also doubles as a \ac{LED} by changing its background
+color to represent \ac{LED} state. The implementation assumes that pull-ups
+are enabled on all ports, and pulls pins to high when a button is released.
+The implementation is otherwise farily trivial and there is not much of interest
+to be mentioned.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Temperature Sensor Component}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cite{maxim02}
-Furthermore,
-we've encountered difficulties caused by the implementation of \ac{IO} pin levels
+The DS1820 temperature sensor contains a 9 byte scratchpad memory, a 2 byte \ac{EEPROM},
+and uses a 1-wire protocol to communicate with the \ac{AVR} core \cite{maxim02}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|l}
+
+Pin/\ac{IRQ}        & Function \\
+
+\hline
+
+PORTG0              & 1-Wire Data\\
+DDRG                & 1-Wire Data Direction
+
+\end{tabular}
+\caption{Temperature Sensor Wiring}
+\label{tab:wiring_glcd}
+\end{table}
+
+This component surprised us with the unexpected complexity of the 1-wire protocol.
+Implementation was further complicated by the difficulties we've encountered
+caused by the implementation of \ac{IO} pin levels
 in \simavr, which does not know how to to behave correctly with a connected
 component; for example, \simavr blindly sets pin levels, even if the \ac{IO} port
-is set to input mode. Unfortunately, we had to use fairly methods to counteract
-that.
+is set to input mode. Unfortunately, we had to use fairly unpleasant methods to
+counteract that.
+
+Let's recall how \simavr handles a write to an \ac{IO} port. \simavr has no
+notion of any connected components; there is no way to tell it whether the component
+has a pull-up resistor nor whether the component is currently transmitting high
+or low. When \simavr receives a \ac{IO} port write, it also does not know
+if it is coming from the \ac{AVR} core, or from an external component.
+
+\begin{lstlisting}
+static void avr_ioport_write(struct avr_t * avr, avr_io_addr_t addr, uint8_t v, void * param)
+{
+    avr_ioport_t * p = (avr_ioport_t *)param;
+    avr_core_watch_write(avr, addr, v);
+
+    for (int i = 0; i < 8; i++)
+        avr_raise_irq(p->io.irq + i, (v >> i) & 1);
+    avr_raise_irq(p->io.irq + IOPORT_IRQ_PIN_ALL, v);
+}
+\end{lstlisting}
+
+As you can see, the \lstinline|IOPORT| \acp{IRQ} are triggered on every port write.
+This of course presents us with a problem; even if the port is set to input\footnote{
+%
+A port is set to input by clearing the \ac{DDR} pin.
+%
+}, every port write will be propagated to the \ac{IRQ} representing pin state. The component
+not only has to ignore this invalid level change, it also has to revert it.
+Since setting a new \ac{IRQ} level is not possible within the \ac{IRQ} callback function,
+we've fallen back on scheduling a cycle timer with a duration of zero to correct
+the \ac{IRQ} value. Of course, all of this only serves to complicate component
+code and to hide its actual purpose.
+
+Even after ignoring the issue of erroneous pin values (which is solved by ignoring
+all pin changes not set by the component itself), the temperature component
+still has to simulate the behavior of its internal pull-up. We have achieved this
+by listening for changes of the \ac{DDR} pin. When the port is switched to input mode,
+we pull the 1-wire pin high manually. Upon switching to output mode, \simavr
+automatically restores the pin level appropriately.
+
+Having discussed the encountered difficulties and the employed solutions, we
+can now turn our attention to the actual protocol implementation located in the
+\lstinline|DS1820| class. 1-wire is a time-based protocol, again pointing to the
+use of cycle timers.
+
+By saving the cycle of the most recent pin edge and comparing
+it with the current cycle, we can easily calculate the low- and high periods.
+Receiving a low pulse of a minimum of 480 \ac{us} resets the state machine,
+regardless of the state we are currently in.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Changes and additions to \simavr}
