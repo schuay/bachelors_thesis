@@ -743,3 +743,68 @@ current temperature can always be written directly into the scratchpad memory by
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Changes and additions to \simavr}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+While working on \qsimavr, we have also spent a very substantial amount of time
+with \simavr itself; we have not only worked on adding new features, but also encountered
+several misbehaviors which we have often been able to correct after extensive debugging.
+In this section, we will discuss the more interesting changing to \simavr which
+we have contributed during the course of this thesis\footnote{
+%
+A complete list of contributions is available in the simavr git commit log. For
+instructions on how to retrieve the source code see section \ref{section:setup_simavr}.
+%
+}.
+
+The \verb|atmega1280| core definition has been amended to include the upper \ac{ADC}
+differential channels, timers 4 and 5, and \ac{UART} 2 and 3, and raised
+\lstinline|MAX_IOs| to include all required \ac{IO} registers.
+
+We've added support for \ac{GDB} data watchpoints (which has already been
+partly described in section \ref{section:gdb_support}).
+
+An error preventing correctly reading and writing \ac{SREG} from \ac{GDB} was fixed
+by de- and reconstructing \ac{SREG} on each access.
+
+Inaccurate sleep timing caused by short cycle timer periods were solved by
+accumulating requested sleep times until a certain threshold has been reached
+(see also section \ref{section:mainloop}).
+
+We prevented spurious \ac{CPU} wakeups while stopped by explicitly checking for
+\lstinline|avr->state == cpu_Sleeping|
+(instead of \lstinline|avr->state != cpu_Running|).
+
+Although many parts of \simavr could already be included into C++ projects
+without issues, some were still missing the required preprocessor instructions.
+We've amended these such that every header can now be used by C++ applications.
+
+Inconsistent handling of \lstinline|avr_terminate| has been improved by never
+calling it within \simavr. \lstinline|avr_t| destruction must \emph{always}
+be done by the user. This interfered with cleanup routines which expected
+\lstinline|avr_t| to stay valid while in fact they could be destructed when
+the \ac{AVR} core sleeps while interrupts have been turned off.
+
+Support has been added for interrupts which (contrary to the norm) do not clear
+their ``raised'' flag bit when entering the \ac{ISR}. In particular, this
+concerns the \ac{TWI} interrupt flag (TWINT) and caused problems during the
+\ac{TWI} simulation.
+
+We've corrected an issue which would incorrectly identify an ``sleeping with
+interrupts off'' state and terminate simulation. This occurred when an interrupt
+was raised and a SLEEP instruction processed before the interrupt could be
+serviced due to \lstinline|pending_wait|.
+
+Logging output, which was previously printed to \lstinline|stderr| and
+\lstinline|stdout| without distinction, is now categorized into log levels with
+increasing verbosity \lstinline|LOG_ERROR|, \lstinline|LOG_WARNING|, and
+\lstinline|LOG_TRACE|. The log level can be selected by passing \verb|-v|
+when running the \simavr binary, or setting \lstinline|avr->log|.
+
+We've fixed a bug in timer handling related to TCNT \ac{IO} register writes that could
+result in an infinite cycle timer loop.
+
+A situation in which the \ac{IO} port \ac{IRQ} would miss level changes was fixed by
+removing manual filtering and relying instead on the \lstinline|IRQ_FLAG_FILTERED|
+behavior.
+
+Finally, \lstinline|IO| port \acp{IRQ} now restore themselves to PORT
+the register value when \ac{DDR} is switched to output mode.
