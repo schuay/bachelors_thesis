@@ -401,6 +401,21 @@ of the internal memory. Reading from the \ac{EEPROM} returns the byte pointed to
 by the \ac{AP} and then increments the \ac{AP}. Similarly, writing data section
 writes it to the \ac{AP} and subsequently increments it.
 
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|l}
+
+Pin/\ac{IRQ}        & Function\\
+
+\hline
+
+\ac{TWI} \acp{IRQ}  & \ac{TWI} connections
+
+\end{tabular}
+\caption{\ac{EEPROM} Wiring}
+\label{tab:wiring_eeprom}
+\end{table}
+
 This functionality is achieved by implementing the \lstinline|TwiSlave| methods
 as follows (edited for clarity):
 
@@ -442,6 +457,21 @@ storage.
 }, communications over a \ac{TWI} bus, and timekeeping logic which updates its
 clock registers once per second \cite{maxim01}.
 
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|l}
+
+Pin/\ac{IRQ}        & Function\\
+
+\hline
+
+\ac{TWI} \acp{IRQ}  & \ac{TWI} connections
+
+\end{tabular}
+\caption{\ac{RTC} Wiring}
+\label{tab:wiring_rtc}
+\end{table}
+
 Internally, the implementation is very similar to the \ac{EEPROM} examined in section
 \ref{section:component_eeprom}; so much in fact, that only differences to the \ac{EEPROM}
 will be discussed here. Writing and reading from the memory storage is identical.
@@ -466,11 +496,88 @@ and three address pointers (storing the horizontal pixel address, the vertical p
 address, and the first page displayed at the top edge of the screen)
 \cite{winstar01, samsung01, neotec01}.
 
+The touchscreen is also included within this component. The initial idea was to
+implement it in a separate component which would be displayed in a transparent
+\ac{MDI} window the same size as the \ac{GLCD} screen and could therefore be
+layered on top of it. However, limitations in \ac{MDI} transparency handling
+(which either drew the entire window transparent including borders and title bar
+or everything opaque) put an end to that idea.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|l}
+
+Pin/\ac{IRQ}        & Function \\
+
+\hline
+
+PORTA0-7            & Data Pins\\
+PORTE2              & \acf{CS1}\\
+PORTE3              & \acf{CS2}\\
+PORTE4              & \acf{RS}\\
+PORTE5              & \acf{RW}\\
+PORTE6              & \acf{E}\\
+PORTE7              & \acf{RST}\\
+\ac{ADC}0 \ac{IRQ}  & Touchscreen X Axis\\
+\ac{ADC}1 \ac{IRQ}  & Touchscreen Y Axis
+
+\end{tabular}
+\caption{\ac{GLCD} Wiring}
+\label{tab:wiring_glcd}
+\end{table}
+
+
+This is one of the most complex components, as it both requires nontrivial steps
+to decode instructions sent by the \ac{AVR} core, and contains a \ac{GUI} part
+which must handle both rudimentary pixel-wise drawing and mouse input.
+The \ac{GLCD} reacts to edges of the \ac{E} pin. On the rising edge, the pin state
+is saved into the command buffer. If the command triggers a read operation\footnote{
+%
+By ``read operation'', we mean that the \ac{AVR} core wants to read from
+the \ac{GLCD} component.
+%
+}, we queue a cycle timer which will write the requested data to the data pins
+upon completion of 320 ns data delay time. Note that display read data first passes an
+intermediate read buffer before it is actually output to the data pins. This
+simulates latching data into the output register which actually occurs in the real
+hardware\footnote{
+%
+Status reads are not affected by this.
+%
+}.
+
+Write operations are handled on the falling \ac{E} edge. After decoding the
+buffered command, current state of the data pins is used to perform the operation.
+
+Each controller chip is simulated by an instance of the \lstinline|NT7108| class.
+These are coordinated by the \lstinline|GlcdLogic| class, which forwards signals
+according to the current state of the \ac{CS1} and \ac{CS2} pins. Whenever an
+operation causes the visible state of the display to change, a signal is emitted
+which is in turn handled by the \ac{GUI} part of the component.
+
+The frontend to the \ac{GLCD} is implemented using a \lstinline|QGraphicsScene|,
+which simplifies routine tasks such as drawing and receiving user input. Each pixel
+is represented by a \lstinline|QGraphicsRectItem|; if it is turned off, we use
+a \lstinline|Qt::green| brush, otherwise it is displayed as \lstinline|Qt::black|.
+Now, when a page of the \ac{GLCD} display \ac{RAM} is changed, all eight affected
+pixels are updated.
+
+The scene also receives mouse events and emits these as signals. These are received
+by the logic part and forwarded to an instance of the \lstinline|Touchscreen| class,
+where the affected coordinates are buffered. These can be requested by the \ac{AVR}
+core by querying \ac{ADC}0 and \ac{ADC}1, which are respectively responsible
+for the X and Y axis. An \ac{ADC} value of 2700 millivolts corresponds approximately
+to the upper and right edges of the screen. The voltages scale linearly until
+reaching 0 volts at the lower and left edges. If no ``touch'' is currently active,
+the coordinates are reset to the neutral lower-left corner.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{LCD} Component}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cite{hitachi01, samsung02, winstar02}
+This component simulates a 2x16 hardware \ac{LCD} display based on the HD44780
+chip \cite{hitachi01, samsung02, winstar02}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acfp{LED} \& Buttons Component}
@@ -481,6 +588,12 @@ address, and the first page displayed at the top edge of the screen)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \cite{maxim02}
+Furthermore,
+we've encountered difficulties caused by the implementation of \ac{IO} pin levels
+in \simavr, which does not know how to to behave correctly with a connected
+component; for example, \simavr blindly sets pin levels, even if the \ac{IO} port
+is set to input mode. Unfortunately, we had to use fairly methods to counteract
+that.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Changes and additions to \simavr}
