@@ -335,20 +335,126 @@ which defines a C function returning a factory instance:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{TWI} Component}
+\section{\acf{TWI} Component} \label{section:component_twi}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+We now turn our attention to the actual component implementations. The \ac{TWI}
+component is actually not a component as defined by the component interface in
+section \ref{subsection:component_interface}; rather, it is a library providing
+helper functions for other components acting as a slave
+using the \ac{TWI} protocol\footnote{
+%
+The \ac{TWI} component compiles into a static library which can be included
+by any other component requiring it.
+%
+}.
+
+To prevent duplicate work and the \ac{NIH} syndrome\footnote{
+%
+For programmers, laziness is a virtue.
+%
+}, the \ac{TWI} implementation is an adaption of the work done by the \simavr
+author in the \verb|i2c_eeprom| component. The \ac{TWI} slave logic was extracted
+into a separate library because it is needed by both the \ac{EEPROM}
+(section \ref{section:component_eeprom}) and \ac{RTC} (section \ref{section:component_rtc})
+components.
+
+We simply connect ourselves to the \lstinline|TWI_IRQ_MISO| and \lstinline|TWI_IRQ_MOSI|
+\acp{IRQ}, process incoming and outgoing messages according to the \ac{TWI}
+protocol, and notify interested parties when we've either received a complete message,
+or we need to send data to the \ac{TWI} master.
+
+For that purpose, a \lstinline|TwiSlave| interface is defined which components
+using \lstinline|TwiComponent| must implement.
+
+\begin{lstlisting}
+class TwiSlave
+{
+public:
+    virtual uint8_t transmitByte() = 0;
+    virtual bool matchesAddress(uint8_t address) = 0;
+    virtual void received(const QByteArray &data) = 0;
+};
+\end{lstlisting}
+
+\lstinline|transmitByte| is called by the \ac{TWI} component whenever the master
+begins a read transaction and returns the next byte to send.
+\lstinline|matchesAddress| returns true, \ac{iff} the slave address matches
+the address sent by the master or if the general call address (\lstinline|0x0|)
+has been sent.
+\lstinline|received| is called with the received data once a write transaction
+completes, and allows the slave to react to a transmission.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{EEPROM} Component}
+\section{\acf{EEPROM} Component} \label{section:component_eeprom}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cite{microchip01}
+The \ac{EEPROM} uses the \ac{TWI} component briefly described in section \ref{section:component_twi}.
+It has been implemented using the datasheet \cite{microchip01} as a reference.
+The simulated \ac{EEPROM} consists of 1 kbit of storage and is controlled over a
+\ac{TWI} bus.
+
+The implementation itself is very simple since the \ac{TWI} logic is encapsulated
+by the \ac{TWI} component. We can therefore look at the \ac{EEPROM} from a very
+high level, and are only interested in keeping track of the \ac{AP} and the state
+of the internal memory. Reading from the \ac{EEPROM} returns the byte pointed to
+by the \ac{AP} and then increments the \ac{AP}. Similarly, writing data section
+writes it to the \ac{AP} and subsequently increments it.
+
+This functionality is achieved by implementing the \lstinline|TwiSlave| methods
+as follows (edited for clarity):
+
+\begin{lstlisting}
+uint8_t EepromLogic::transmitByte()
+{
+    return eeprom[incrementAddress()];
+}
+
+void EepromLogic::received(const QByteArray &data)
+{
+    addressPointer = data[0];
+    for (int i = start; i < data.size(); i++) {
+        eeprom[incrementAddress()] = data[i];
+    }
+}
+
+bool EepromLogic::matchesAddress(uint8_t address)
+{
+    return ((address & EEPROM_MASK) == (EEPROM_ADDR & EEPROM_MASK) ||
+            (address & 0xfe) == 0x00);
+}
+\end{lstlisting}
+
+The \lstinline|QByteArray| is used to represent the byte storage internally as it
+provides both the convenience of many helper functions, and the advantages
+of raw memory arrays through \lstinline|QByteArray::data|.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{RTC} Component}
+\section{\acf{RTC} Component} \label{section:component_rtc}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cite{maxim01}
+The \ac{RTC} component consists of a 56 byte memory area\footnote{
+%
+8 of which are used to represent clock state, with the rest usable as generic
+storage.
+%
+}, communications over a \ac{TWI} bus, and timekeeping logic which updates its
+clock registers once per second \cite{maxim01}.
+
+Internally, the implementation is very similar to the \ac{EEPROM} examined in section
+\ref{section:component_eeprom}; so much in fact, that only differences to the \ac{EEPROM}
+will be discussed here. Writing and reading from the memory storage is identical.
+
+The first 7 bytes represent the clock's date and time in \ac{BCD} format and need
+to be updated periodically to reflect the passing of time. Once again,
+\simavr's cycle timers (discussed in section \ref{section:cycle_timers}) came in
+handy to achieve the desired functionality. A callback is registered to occur
+once every second (of simulated time), which updates the the date
+and time bytes. Handling of leap years is simplified by relying on Qt's
+\lstinline|QDate| class.
+
+The square wave pin of the actual component is \emph{not} implemented.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{GLCD} Component}
