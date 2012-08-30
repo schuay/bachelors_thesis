@@ -9,7 +9,7 @@ parts work together, beginning with the core, the component interface,
 a short walkthrough of all components, and finally brief descriptions of the
 modifications and additions made to \simavr during the course of this thesis.
 
-\section{Core} \label{section:core}
+\section{\qsimavr Core} \label{section:core}
 
 The core of \qsimavr is located in the \verb|QSimAVR/| subfolder of the source
 tree. Its responsibilities include handling the routine tasks of the main window
@@ -85,13 +85,85 @@ displayed in the status bar).
 
 \lstinline|SimAVR| also provides method for pausing, unpausing and stopping the
 simulation, and for preparing \simavr to listen to incoming \ac{GDB} connections.
+Each of these operations also results in changes to the simulation state.
 
 Whenever a firmware is loaded or unloaded, signals are emitted and processed
 by \lstinline|PluginManager| to respectively connect and disconnect components
 from the \lstinline|avr_t| instance.
 
+\section{\lstinline|PluginManager|}
 
-\section{Component Interface}
+The plugin manager
+
+\begin{itemize}
+\item Can load components from shared libraries,
+\item Creates \ac{MDI} sub-windows within the main \lstinline|QMdiArea| as needed,
+\item Manages their connections to \lstinline|avr_t| instances as plugins are
+      enabled or disabled and simulation is restarted or loaded with a new firmware
+      file,
+\item Turns \ac{VCD} tracing on depending on the selections made in component
+      settings, and
+\item Saves and restores component settings.
+\end{itemize}
+
+Loading plugins is implemented such that files in a specific directory (which can be
+set during installation, see section \ref{section:setup_qsimavr}) are iterated
+one by one. If loading a file fails, an error message is printed to the log targets
+and loading continues with the next file. Each component must adhere to the
+component interface (see section \ref{section:component_interface}) and contain
+the plugin registration function.
+It is also possible to keep components
+in different directories, only placing symlinks (symbolic links) into
+\lstinline|PLUGINDIR|.
+
+\begin{lstlisting}
+QLibrary lib(filename);
+RegisterFunction registerPlugin = (RegisterFunction)lib.resolve(PUBLISH_FNAME);
+
+QSharedPointer<ComponentFactory> factory(registerPlugin());
+\end{lstlisting}
+
+Component registration uses the \lstinline|QLibrary| class to load the shared library,
+and then creates a factory instance by calling the \lstinline|registerPlugin|
+function common to each component.
+
+The factory then creates the actual logic and \ac{GUI} parts. If a \ac{GUI} part
+exists, a \lstinline|QMdiSubWindow| is created containing the component's widget.
+The logic part is moved to the \lstinline|SimAVR| thread.
+
+Whenever \lstinline|firmwareLoaded| or \lstinline|firmwareUnloaded| signal is sent
+by \lstinline|SimAVR|, the logic part of components is, respectively, connected
+or disconnected from the \lstinline|avr_t| instance.
+
+Component settings are saved and loaded using the Qt's \lstinline|QSettings|
+class, which provides a simple and cross-platform method of handling settings
+files.
+
+\section{Component Interface} \label{section:component_interface}
+
+Each component must implement the component interface defined in
+\verb|QSimAVR/component.h|. It consists of factory, \ac{GUI} and logic classes,
+and a \lstinline|registerPlugin| function which returns a factory instance. Let's
+take a look at each of these:
+
+\begin{lstlisting}
+template<typename Interface>
+class Factory {
+public:
+    Factory() { }
+    virtual Interface create() = 0;
+    virtual ~Factory() { }
+
+private:
+    Q_DISABLE_COPY(Factory)
+};
+
+typedef Factory<Component> ComponentFactory;
+\end{lstlisting}
+
+The factory is a generic class which simply provides a \lstinline|create| function
+to create, initialize and return an object. In \qsimavr, we only use the instatiated
+version \lstinline|ComponentFactory|, which returns a \lstinline|Component|.
 
 \section{\acf{TWI} Component}
 
