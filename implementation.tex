@@ -403,14 +403,16 @@ writes it to the \ac{AP} and subsequently increments it.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{ll}
+\toprule
 
 Pin/\ac{IRQ}        & Function\\
 
-\hline
+\midrule
 
-\ac{TWI} \acp{IRQ}  & \ac{TWI} connections
+\ac{TWI} \acp{IRQ}  & \ac{TWI} connections\\
 
+\bottomrule
 \end{tabular}
 \caption{\ac{EEPROM} Wiring}
 \label{tab:wiring_eeprom}
@@ -459,14 +461,16 @@ clock registers once per second \cite{maxim01}.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{ll}
+\toprule
 
 Pin/\ac{IRQ}        & Function\\
 
-\hline
+\midrule
 
-\ac{TWI} \acp{IRQ}  & \ac{TWI} connections
+\ac{TWI} \acp{IRQ}  & \ac{TWI} connections\\
 
+\bottomrule
 \end{tabular}
 \caption{\ac{RTC} Wiring}
 \label{tab:wiring_rtc}
@@ -505,22 +509,24 @@ or everything opaque) put an end to that idea.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{ll}
+\toprule
 
 Pin/\ac{IRQ}        & Function \\
 
-\hline
+\midrule
 
-PORTA0-7            & Data Pins\\
-PORTE2              & \acf{CS1}\\
-PORTE3              & \acf{CS2}\\
-PORTE4              & \acf{RS}\\
-PORTE5              & \acf{RW}\\
-PORTE6              & \acf{E}\\
-PORTE7              & \acf{RST}\\
+\lstinline|PORTA0-7|& Data Pins\\
+\lstinline|PORTE2|  & \acf{CS1}\\
+\lstinline|PORTE3|  & \acf{CS2}\\
+\lstinline|PORTE4|  & \acf{RS}\\
+\lstinline|PORTE5|  & \acf{RW}\\
+\lstinline|PORTE6|  & \acf{E}\\
+\lstinline|PORTE7|  & \acf{RST}\\
 \ac{ADC}0 \ac{IRQ}  & Touchscreen X Axis\\
-\ac{ADC}1 \ac{IRQ}  & Touchscreen Y Axis
+\ac{ADC}1 \ac{IRQ}  & Touchscreen Y Axis\\
 
+\bottomrule
 \end{tabular}
 \caption{\ac{GLCD} Wiring}
 \label{tab:wiring_glcd}
@@ -582,16 +588,18 @@ was taken from the \verb|hd44780| example part included with \simavr.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{ll}
+\toprule
 
 Pin/\ac{IRQ}        & Function \\
 
-\hline
+\midrule
 
-PORTC4-7            & Data Pins\\
-PORTC2              & \acf{RS}\\
-PORTC3              & \acf{E}
+\lstinline|PORTC4-7|& Data Pins\\
+\lstinline|PORTC2|  & \acf{RS}\\
+\lstinline|PORTC3|  & \acf{E}\\
 
+\bottomrule
 \end{tabular}
 \caption{\ac{LCD} Wiring}
 \label{tab:wiring_lcd}
@@ -611,24 +619,26 @@ component.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{ll}
+\toprule
 
 Pin/\ac{IRQ}        & Function \\
 
-\hline
+\midrule
 
-PORTA0-7            & \acp{LED} \& Buttons\\
-PORTB0-7            & \acp{LED} \& Buttons\\
-PORTC0-7            & \acp{LED} \& Buttons\\
-PORTD0-7            & \acp{LED} \& Buttons\\
-PORTE0-7            & \acp{LED} \& Buttons\\
-PORTF0-7            & \acp{LED} \& Buttons\\
-PORTG0-5            & \acp{LED} \& Buttons\\
-PORTH0-7            & \acp{LED} \& Buttons\\
-PORTJ0-7            & \acp{LED} \& Buttons\\
-PORTK0-7            & \acp{LED} \& Buttons\\
-PORTL0-7            & \acp{LED} \& Buttons
+\lstinline|PORTA0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTB0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTC0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTD0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTE0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTF0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTG0-5|& \acp{LED} \& Buttons\\
+\lstinline|PORTH0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTJ0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTK0-7|& \acp{LED} \& Buttons\\
+\lstinline|PORTL0-7|& \acp{LED} \& Buttons\\
 
+\bottomrule
 \end{tabular}
 \caption{\acp{LED} \& Buttons Wiring}
 \label{tab:wiring_ledbuttons}
@@ -649,15 +659,17 @@ and uses a 1-wire protocol to communicate with the \ac{AVR} core \cite{maxim02}.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{ll}
+\toprule
 
 Pin/\ac{IRQ}        & Function \\
 
-\hline
+\midrule
 
-PORTG0              & 1-Wire Data\\
-DDRG                & 1-Wire Data Direction
+\lstinline|PORTG0|  & 1-Wire Data\\
+\lstinline|DDRG|    & 1-Wire Data Direction\\
 
+\bottomrule
 \end{tabular}
 \caption{Temperature Sensor Wiring}
 \label{tab:wiring_temperature}
