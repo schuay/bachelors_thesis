@@ -618,7 +618,7 @@ the program counter is set to the \ac{ISR} vector. Finally, if
 \lstinline|raise_sticky| is 0, the interrupt flag is cleared.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Cycle Timers}
+\section{Cycle Timers} \label{section:cycle_timers}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Cycle timers allow scheduling an event after a certain amount of cycles have
@@ -872,7 +872,7 @@ provides unified access to module \acp{IRQ}, reset and deallocation callbacks,
 and a \ac{IOCTL} system.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{\acf{IO} Register Callbacks}
+\subsection{\acf{IO} Register Callbacks} \label{subsection:io_register_callbacks}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We will examine the \ac{IO} register callback system first. Whenever the \simavr
@@ -939,7 +939,7 @@ the \verb|avr_timer| module uses \ac{IO} callbacks to start the timer when
 a clock source is enabled through the timer registers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The \lstinline|avr_io_t| Module} \label{subsection:io_register_callbacks}
+\subsection{The \lstinline|avr_io_t| Module} \label{subsection:avr_io_t}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \lstinline|avr_io_t| infrastructure provides additional functionality to
@@ -1065,7 +1065,7 @@ avr_connect_irq(avr_io_getirq(avr, AVR_IOCTL_IOPORT_GETIRQ(PORT), PIN), irq + IR
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{VCD} Files}
+\section{\acf{VCD} Files} \label{section:vcd_files}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \ac{VCD} is a simple file format for dumps of signal changes over time. Each file

@@ -2,14 +2,19 @@
 %% Implementation
 %%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Implementation} \label{chapter:implementation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We will now examine the actual implementation of \qsimavr and how its individual
 parts work together, beginning with the core, the component interface,
 a short walkthrough of all components, and finally brief descriptions of the
 modifications and additions made to \simavr during the course of this thesis.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\qsimavr Core} \label{section:core}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The core of \qsimavr is located in the \verb|QSimAVR/| subfolder of the source
 tree. Its responsibilities include handling the routine tasks of the main window
@@ -21,7 +26,10 @@ In the following sections, we will discuss the interesting parts of the
 \lstinline|SimAVR| and \lstinline|PluginManager| classes. Interested readers
 should consult the source code for complete implementation details.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{\lstinline|SimAVR|} \label{subsection:class_simavr}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \lstinline|SimAVR| class encapsulates the \lstinline|avr_t| instance. It
 runs in its own thread by subclassing \lstinline|QThread| and being started
@@ -91,7 +99,10 @@ Whenever a firmware is loaded or unloaded, signals are emitted and processed
 by \lstinline|PluginManager| to respectively connect and disconnect components
 from the \lstinline|avr_t| instance.
 
-\section{\lstinline|PluginManager|}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{\lstinline|PluginManager|}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The plugin manager
 
@@ -110,7 +121,7 @@ Loading plugins is implemented such that files in a specific directory (which ca
 set during installation, see section \ref{section:setup_qsimavr}) are iterated
 one by one. If loading a file fails, an error message is printed to the log targets
 and loading continues with the next file. Each component must adhere to the
-component interface (see section \ref{section:component_interface}) and contain
+component interface (see section \ref{subsection:component_interface}) and contain
 the plugin registration function.
 It is also possible to keep components
 in different directories, only placing symlinks (symbolic links) into
@@ -139,7 +150,10 @@ Component settings are saved and loaded using the Qt's \lstinline|QSettings|
 class, which provides a simple and cross-platform method of handling settings
 files.
 
-\section{Component Interface} \label{section:component_interface}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Component Interface} \label{subsection:component_interface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Each component must implement the component interface defined in
 \verb|QSimAVR/component.h|. It consists of factory, \ac{GUI} and logic classes,
@@ -161,32 +175,203 @@ private:
 typedef Factory<Component> ComponentFactory;
 \end{lstlisting}
 
-The factory is a generic class which simply provides a \lstinline|create| function
+The factory is a generic class which simply provides a pure abstract \lstinline|create| function
 to create, initialize and return an object. In \qsimavr, we only use the instatiated
 version \lstinline|ComponentFactory|, which returns a \lstinline|Component|.
 
-\section{\acf{TWI} Component}
+\lstinline|Q_DISABLE_COPY| prevents copying a class by declaring the copy and
+assignment constructors in the private section:
 
+\begin{lstlisting}
+#define Q_DISABLE_COPY(Class) \
+    Class(const Class &); \
+    Class &operator=(const Class &);
+\end{lstlisting}
+
+In practice, \lstinline|ComponentFactory::create| constructs all parts of a component, connects
+their signals and slots\footnote{
+%
+It is particularly important to realize that these must use queued signal
+delivery, since the logic and \ac{GUI} parts do not reside in the same thread.
+Specify \lstinline|Qt::QueuedConnection| in \lstinline|QObject::connect()|.
+%
+} and packs them into a \lstinline|Component|, which is simply a struct containing
+smart pointers to the component parts:
+
+\begin{lstlisting}
+struct Component
+{
+    QSharedPointer<ComponentGui> gui;
+    QSharedPointer<ComponentLogic> logic;
+};
+\end{lstlisting}
+
+The \ac{GUI} part of a component provides a method for the user to interact with
+the plugin by both displaying component state and allowing user input.
+
+\begin{lstlisting}
+class ComponentGui
+{
+public:
+    ComponentGui() { }
+
+    virtual QWidget *widget() = 0;
+    virtual ~ComponentGui() { }
+
+private:
+    Q_DISABLE_COPY(ComponentGui)
+};
+\end{lstlisting}
+
+Its interface is very simple; communication with the logic part is handled internally
+by signals, and user interaction is handled by the widget itself. The
+\lstinline|QWidget| is displayed as the central widget in a \lstinline|QMdiSubWindow|.
+Most of the time, the functionality provided by a \ac{GUI} component is simple enough
+such that it can inherit both from \lstinline|ComponentGui| and \lstinline|QWidget|
+itself\footnote{
+%
+Therefore, \lstinline|ComponentGui::widget| can simply return the
+\lstinline|this| pointer.
+%
+}.
+
+The logic part encapsulates a component's internal state; it also reacts to signals,
+communicates with it's \ac{GUI}, and is responsible for accurately simulating
+the behavior of the actual component.
+
+\begin{lstlisting}
+class ComponentLogic : public QObject
+{
+public:
+    ComponentLogic(QObject *parent = NULL);
+    virtual ~ComponentLogic() { }
+
+    virtual void wire(avr_t *avr);
+    virtual void unwire();
+    virtual void enableVcd(bool vcdEnabled);
+
+protected:
+    virtual void wireHook(avr_t *avr) = 0;
+    virtual void unwireHook() = 0;
+    virtual void resetHook() { }
+
+protected:
+    bool connected;
+    bool vcdEnabled;
+
+    avr_vcd_t vcdFile;
+
+    struct component_io_t {
+        avr_io_t io;
+        ComponentLogic *instance;
+    } io;
+
+private:
+    static void resetHookPrivate(avr_io_t *io);
+
+private:
+    Q_DISABLE_COPY(ComponentLogic)
+};
+\end{lstlisting}
+
+Common functionality is handled in \lstinline|ComponentLogic| itself by implementing
+it in the public function, which then calls a private hook at an appropriate time
+(for example, see \lstinline|wire| and \lstinline|wireHook|).
+
+\lstinline|wire| connects a component to the \lstinline|avr_t| instance. Most of
+the time, this involves creating internal \acp{IRQ}, connecting them to the
+desired target \acp{IRQ}, setting up notification callbacks, and defining the
+signals traced by a \ac{VCD}.
+
+Callback functions require a little extra work because \simavr is written in plain
+C and has no notion of classes or member functions. A simple solution to this problem
+is to register a static class function as the callback, pass \lstinline|this| as
+the callback \lstinline|param|, and let the static function execute the actual member
+function. A typical example (taken from the temperature component):
+
+\begin{lstlisting}
+void TemperatureLogic::wireHook(avr_t *avr)
+{
+    /* [...] */
+    avr_irq_register_notify(irq + IRQ_TEMP_DQ, TemperatureLogic::pinChangedHook, this);
+    /* [...] */
+}
+
+void TemperatureLogic::pinChangedHook(avr_irq_t *, uint32_t value, void *param)
+{
+    TemperatureLogic *p = (TemperatureLogic *)param;
+    p->pinChanged(value);
+}
+\end{lstlisting}
+
+\lstinline|enableVcd| simply toggles \ac{VCD} traces on and off. A default implementation
+is provided in \lstinline|ComponentLogic| itself.
+
+Again, supporting \simavr
+\ac{VCD} traces has an interesting quirk; as explained in section \ref{section:vcd_files},
+\ac{VCD} files depend upon \simavr cycle timers\footnote{
+%
+See section \ref{section:cycle_timers}.
+%
+}, which are transient and deleted entirely when \lstinline|avr_reset| is called.
+We therefore require a way to recreate cycle timers on each reset. This functionality
+is provided the \lstinline|avr_io_t| module (section \ref{subsection:avr_io_t}),
+or more specifically, its \lstinline|reset| callback. Each component is registered
+with the \lstinline|avr_t| core as such a module. On each reset event,
+\ac{VCD} connections are automatically restored, and the (optional)
+\lstinline|ComponentLogic::resetHook| of every component is called for any
+custom setup steps.
+
+The final piece of the \lstinline|Component| interface is the registration function.
+Plugins must declare themselves using the \lstinline|PUBLISH_PLUGIN| macro,
+which defines a C function returning a factory instance:
+
+\begin{lstlisting}
+#define PUBLISH_PLUGIN(factory) \
+    extern "C" { \
+        ComponentFactory *registerPlugin() { return new factory; } \
+    }
+\end{lstlisting}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{\acf{TWI} Component}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{EEPROM} Component}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \cite{microchip01}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{RTC} Component}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \cite{maxim01}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{GLCD} Component}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \cite{winstar01, samsung01, neotec01}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{LCD} Component}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \cite{hitachi01, samsung02, winstar02}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{LED} Buttons Component}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Temperature Sensor Component}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \cite{maxim02}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Changes and additions to \simavr}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
