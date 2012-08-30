@@ -25,7 +25,7 @@ should consult the source code for complete implementation details.
 
 The \lstinline|SimAVR| class encapsulates the \lstinline|avr_t| instance. It
 runs in its own thread by subclassing \lstinline|QThread| and being started
-with the \lstinline|start()| method.
+with the \lstinline|start()| function.
 
 \begin{lstlisting}
 class SimAVR : public QThread
@@ -83,7 +83,7 @@ Changes in simulation state are in turn
 emitted as signals (which are then processed by \lstinline|MainWindow| and
 displayed in the status bar).
 
-\lstinline|SimAVR| also provides method for pausing, unpausing and stopping the
+\lstinline|SimAVR| also provides functions for pausing, unpausing and stopping the
 simulation, and for preparing \simavr to listen to incoming \ac{GDB} connections.
 Each of these operations also results in changes to the simulation state.
 
