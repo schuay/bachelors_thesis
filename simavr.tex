@@ -509,7 +509,7 @@ Instructions such as SLEEP and BREAK directly alter the state of the simulation.
 \item Stack operations
 
 Pushing and popping the stack involve altering the stack pointer in addition
-to the actual memory access. 
+to the actual memory access.
 \end{itemize}
 
 Upon conclusion, \lstinline|avr->cycle| is updated with the actual instruction
@@ -998,7 +998,7 @@ by the \verb|avr_ioport| module.
 void avr_ioport_init(avr_t * avr, avr_ioport_t * p)
 {
     p->io = _io;
-    
+
     avr_register_io(avr, &p->io);
     avr_register_vector(avr, &p->pcint);
     avr_io_setirqs(&p->io, AVR_IOCTL_IOPORT_GETIRQ(p->name), IOPORT_IRQ_COUNT, NULL);

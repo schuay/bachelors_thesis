@@ -4,7 +4,94 @@
 
 \chapter{Implementation} \label{chapter:implementation}
 
-\section{Core}
+We will now examine the actual implementation of \qsimavr and how its individual
+parts work together, beginning with the core, the component interface,
+a short walkthrough of all components, and finally brief descriptions of the
+modifications and additions made to \simavr during the course of this thesis.
+
+\section{Core} \label{section:core}
+
+The core of \qsimavr is located in the \verb|QSimAVR/| subfolder of the source
+tree. Its responsibilities include handling the routine tasks of the main window
+(including menu and action handling, status bar updates, displaying ``File Open''
+dialogs when loading firmware, etc \ldots), loading and subsequently managing
+plugins, and actually running the \simavr main loop.
+
+In the following sections, we will discuss the interesting parts of the
+\lstinline|SimAVR| and \lstinline|PluginManager| classes. Interested readers
+should consult the source code for complete implementation details.
+
+\subsection{\lstinline|SimAVR|} \label{subsection:class_simavr}
+
+The \lstinline|SimAVR| class encapsulates the \lstinline|avr_t| instance. It
+runs in its own thread by subclassing \lstinline|QThread| and being started
+with the \lstinline|start()| method.
+
+\begin{lstlisting}
+class SimAVR : public QThread
+{
+    Q_OBJECT
+
+public:
+    SimAVR();
+    virtual ~SimAVR();
+
+    void load(const QString &filename);
+    void run();
+
+public slots:
+    void pauseSimulation();
+    void stopSimulation();
+    void attachGdb();
+
+private:
+    avr_t *avr;
+
+    /* [...] */
+};
+\end{lstlisting}
+
+\lstinline|SimAVR| can load firmware, initialize the \lstinline|avr_t| instance,
+and execute its main loop:
+
+\begin{lstlisting}
+int state;
+uint8_t i = 0;
+do {
+    state = avr_run(avr);
+    if (i++ == 0) {
+        QCoreApplication::processEvents();
+    }
+} while (state != cpu_Done && state != cpu_Crashed);
+emit simulationStateChanged(Done);
+\end{lstlisting}
+
+The loop itself is very similar to ones we have already seen in section
+\ref{section:simavr_example_walkthrough}; additionally, since we heavily use
+queued signals, we need to call \lstinline|processEvents| to allow the internal
+Qt event handler to forward signals. However, profiling sessions have shown
+\lstinline|processEvents| to require an unacceptable amount of processing time
+when called each loop iteration - it appears that every call will require at least
+one mutex lock and unlock cycle. For performance reasons, we therefore limited
+event processing to occur only once every $2^8$ iterations.\footnote{
+%
+This is also somewhat less than ideal when using \ac{GDB} for short steps, since
+results will only be visible with an average delay of $2^7$ iterations.
+%
+}
+Changes in simulation state are in turn
+emitted as signals (which are then processed by \lstinline|MainWindow| and
+displayed in the status bar).
+
+\lstinline|SimAVR| also provides method for pausing, unpausing and stopping the
+simulation, and for preparing \simavr to listen to incoming \ac{GDB} connections.
+
+Whenever a firmware is loaded or unloaded, signals are emitted and processed
+by \lstinline|PluginManager| to respectively connect and disconnect components
+from the \lstinline|avr_t| instance.
+
+
+\section{Component Interface}
 
 \section{\acf{TWI} Component}
 
