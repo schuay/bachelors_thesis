@@ -122,6 +122,14 @@ to communicate with the \ac{GUI} part living in the main Qt thread. User input
 is passed from the \ac{GUI} to the logic handler, and display information in the
 other direction.
 
+The \ac{GUI} itself needs to be able to display all component frontends, which
+again can be enabled and disabled at any time. This immediately brings a multi-window
+interface to mind. Since we were not completely happy with the idea of many
+small windows floating individually around the desktop, we looked for further options
+and soon hit on Gt's \ac{MDI} interface. The \lstinline|QMDIArea| (plus its child
+components \lstinline|CMDISubWindow|) provide a multi-window interface but
+encapsulate within a single ``main'' window.
+
 It would be ideal to have flexible wiring between the components and the core.
 Some of the standard BIGAVR6 components can be configured to connect to different
 pins using dip-switches; the connection of external components is completely
