@@ -716,7 +716,29 @@ use of cycle timers.
 By saving the cycle of the most recent pin edge and comparing
 it with the current cycle, we can easily calculate the low- and high periods.
 Receiving a low pulse of a minimum of 480 \ac{us} resets the state machine,
-regardless of the state we are currently in.
+regardless of the state we are currently in. After a reset, the DS1820
+expects a ROM command, which is often followed by a function command. Either of
+these can involve both reads and writes. Details of the protocol are excellently
+demonstrated in the datasheet \cite{maxim02}.
+
+The DS1820 has two memory areas - a transient scratchpad, and a 2 byte \ac{EEPROM}
+for permanent storage of alarm levels. Both can be accessed by the \ac{AVR} core
+using specific command sequences. On each scratchpad write access, the \ac{CRC}
+sum stored in the \nth{9} byte is updated using the \lstinline|crc8| function\footnote{
+%
+Based on code by Colin O'Flynn.
+%
+}. Changes to either area are emitted as signals to the \ac{GUI} part, which
+displays the memory in an editable hex editor widget\footnote{
+%
+The used widget is QHexEdit2 by Winfried Simon. The source code is available
+at \url{http://code.google.com/p/qhexedit2/}.
+%
+}. If the user changes memory areas, these are in turn signalled to the
+\lstinline|DS1820| class, which updates the corresponding memory areas.
+
+Triggering a temperature conversion in this implementation does nothing, since the
+current temperature can always be written directly into the scratchpad memory by the user.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Changes and additions to \simavr}
