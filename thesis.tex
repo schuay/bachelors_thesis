@@ -1,33 +1,26 @@
-%%
-%%  Project:        Dissertation
-%%  File:           $RCSfile$
-%%  Version:        $Revision$
-%%  Creation date:  Mon March 27, 2000
-%%  Last changes:   $Date$
-%%  Author:         $Author$
-%%                  bauer@vmars.tuwien.ac.at
-%%  Contents:       Main LaTeX File
-%%
-%%  FileID:         $Id$
-%%
-
 \documentclass[12pt,a4paper,oneside]{scrreprt}
 
-\usepackage{graphicx}          %includegraphics-command
+\usepackage{graphicx}                       % includegraphics-command
 \usepackage{fancyheadings}
 \usepackage[pdfborder={0 0 0}]{hyperref}
 \usepackage[english,germanb]{babel}
-\usepackage[latin1]{inputenc}  %support direct writing of German Umlauts
-\usepackage{dcolumn}           %decimal column formatting
+\usepackage[latin1]{inputenc}               % Support direct writing of German Umlauts
+\usepackage{dcolumn}                        % Decimal column formatting
 \usepackage[usenames,dvipsnames]{color}
+\usepackage{mybakktitlepage}
 \usepackage{listings}
 \usepackage{acronym}
-\usepackage{fancyvrb}
-\usepackage{xspace}
-\usepackage{chngcntr}
-\usepackage[super]{nth}
+\usepackage{fancyvrb}                       % Verbatim environment with samepage option
+\usepackage{xspace}                         % Better handling of spaces after custom commands
+\usepackage{chngcntr}                       % Footnote counter settings
+\usepackage[super]{nth}                     % 9th formatting
 
-\counterwithout{footnote}{chapter}
+\counterwithout{footnote}{chapter}          % Do not reset footnote counter between chapters
+
+
+%%
+%% -------------------------listings configuration----------------------
+%%
 
 \definecolor{Brown}{cmyk}{0,0.81,1,0.60}
 \definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
@@ -49,10 +42,16 @@
     morekeywords={__attribute__},           % Specific keywords
 }
 
+%%
+%% -------------------------Custom commands-----------------------------
+%%
+
+\newcommand{\simavr}{\emph{simavr}\xspace}
+\newcommand{\qsimavr}{\emph{qsimavr}\xspace}
+
 \newcolumntype{d}[1]{D{.}{.}{#1}}              % decimal formatting in tables
 \newcolumntype{C}[1]{@{}>{\centering}p{#1}@{}} % centered columns with fixed width: C{width}
 
-\usepackage{mybakktitlepage}
 
 %%
 %% ---------------------------------------------------------------------
@@ -77,8 +76,6 @@
 \setcounter{tocdepth}{2}
 \addtolength{\abovecaptionskip}{-10pt}
 
-\newcommand{\simavr}{\emph{simavr}\xspace}
-\newcommand{\qsimavr}{\emph{qsimavr}\xspace}
 \newcommand{\eg}{e.\,g., }
 \newcommand{\ie}{i.\,e., }
 \def\lqq{\lq\lq}
