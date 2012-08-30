@@ -460,7 +460,11 @@ The square wave pin of the actual component is \emph{not} implemented.
 \section{\acf{GLCD} Component}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\cite{winstar01, samsung01, neotec01}
+The \ac{GLCD} component simulates a 128x64 Graphic \ac{LCD} display, based internally
+on two NT7108 controller chips. Each of these has 512 bytes of display \ac{RAM},
+and three address pointers (storing the horizontal pixel address, the vertical page
+address, and the first page displayed at the top edge of the screen)
+\cite{winstar01, samsung01, neotec01}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\acf{LCD} Component}
@@ -469,7 +473,7 @@ The square wave pin of the actual component is \emph{not} implemented.
 \cite{hitachi01, samsung02, winstar02}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{LED} Buttons Component}
+\section{\acfp{LED} \& Buttons Component}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
