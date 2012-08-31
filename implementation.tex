@@ -767,8 +767,9 @@ instructions on how to retrieve the source code see section \ref{section:setup_s
 %
 }.
 
-The \verb|atmega1280| core definition has been amended to include the upper \ac{ADC}
-differential channels, timers 4 and 5, and \ac{UART} 2 and 3, and raised
+The \verb|atmega1280| core definition has been amended to include correct
+definitions of the upper \ac{ADC}
+differential channels, timers 4 and 5, \ac{UART} 2 and 3, and EINT4 to EINT7, and raised
 \lstinline|MAX_IOs| to include all required \ac{IO} registers.
 
 We've added support for \ac{GDB} data watchpoints (which has already been
