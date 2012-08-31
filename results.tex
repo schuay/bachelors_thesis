@@ -1,30 +1,90 @@
 %%
 %% Results
 %%
-%% This file should be edited by user
-%%
 
 \chapter{Results and Discussion} \label{chapter:results}
 
-\section{Limitation: Simplified pin level handling}
+During the course if this thesis, we have developed a new open source frontend
+to \simavr targeted towards simulating \ac{AVR} hardware components using a
+simple, extensible, and powerful plugin architecture. Six components (simulating
+eight actual hardware components) with very diverse tasks have been implemented,
+serving as both initial functionality and examples for further component
+implementations. Example code is available for the \ac{TWI} and 1-wire protocols.
 
-%% TODO: In simavr, a wire always has exactly one level. It is complicated
-%% to simulate correct behavior when more than one level is on a wire (for example
-%% a pullup and another signal.
+Benefits have also reached upstream\footnote{
+%
+In free and open source projects, the upstream of a program or set of
+programs is the project that develops those programs. Fedora is downstream
+of those projects. This term comes from the idea that water and the goods it
+carries float downstream and benefit those who are there to receive it. \cite{fedora}
+In this case, \simavr is the upstream project.
+%
+} in the form of numerous bug fixes (especially regarding the \verb|atmega1280|
+\ac{MCU}) and new features such as \ac{GDB} watchpoints. The existing documentation
+has already been improved, and hopefully the \simavr chapters of this thesis
+will also be of great value (sections \ref{chapter:simavr} and \ref{section:setup_simavr}).
 
-\section{Limitation: No component chaining}
+We would like to point out that none of this would have been possible without
+the open source ecosystem. We have used other developers' code, learned through
+many freely available examples, and contributed back to upstream projects.
+Having the source code available is also extremely important while debugging.
+Of course, \qsimavr is also released as an open source project, in the hope
+that it will be useful to others.
 
-\section{Per-component logging}
-\section{Per-component configuration}
+We also welcome all contributions, further developments and bug fixes. In particular
+there are several topics which could use further attention and would be good
+candidates for follow-up projects, both within \qsimavr and \simavr:
 
-%% For example: PORTD == off.
+\begin{itemize}
+\item \ac{IO} pin level handling
 
-\section{Non-transient component state}
+\simavr's current \verb|avr_ioport| implementation complicates matters when
+intricate interactions with connected components are required. This issue
+has already been discussed in section \ref{section:component_temperature}.
+We envision a solution in which \simavr is aware of the state of the communication
+partner (for example, it could be pulling the pin high with a weak pull-up resistor),
+and automatically sets the pin level correctly.
 
-%% For example: EEPROM contents.
+\item Sleep modes
 
-\section{\simavr sleep modes}
+\simavr has no notion of different sleep modes. So far, we have not run into a
+situation in which this turned out to be a problem, but improving simulation
+accuracy is always a valid goal.
 
-%%
-%% = eof =====================================================================
-%%
+\item Component chaining
+
+\qsimavr currently forces all components to connect directly to the core.
+While we use a chaining-like mechanism with the \ac{EEPROM}, \ac{RTC}, and \ac{TWI}
+components, it is currently not possible to properly connect one component to
+another component.
+
+\item Flexible wiring
+
+At the time of writing, all wiring between components and the \ac{AVR} core is
+hardcoded. Flexible wiring (allowing the user to configure which pins components
+are connected to) would provide substantial advantages, both for using
+components with different \ac{AVR} cores with different configurations, and
+for altering the configuration of a component on the board itself (the BIGAVR6
+board even allows configuring the wirings of several internal components with
+dip-switches).
+
+\item Per-component logging
+
+Components currently print all messages to the console. It would be useful to be
+able to separate logging messages by component, maybe even displaying these within
+\qsimavr itself.
+
+\item Custom component configurations
+
+While we do store component settings, these are common to all components.
+Ideally, each component should be able to manage its own custom configurations.
+This could also be used for the purpose of storing permanent state such as \ac{EEPROM}
+contents.
+
+\item Cross-platform compatibility
+
+The current version of \qsimavr has only been developed and tested on Linux.
+All used technologies support several platforms, and porting \qsimavr should
+take only a short time. Compilation and setup instructions would also have to be
+created.
+\end{itemize}
