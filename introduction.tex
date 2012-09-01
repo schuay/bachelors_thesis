@@ -4,4 +4,78 @@
 
 \chapter{Introduction} \label{chapter:introduction}
 
-% TODO
+Developing complex applications is an extremely difficult task, even more so when
+the targeted platform is as close to the hardware as microcontrollers. Unlike
+typical computer programs, programming for a microcontroller is done at a very level,
+requiring knowledge of the exact hardware specifications and using strict protocols
+to correctly communicate with external periphery. These protocols often require
+sending signals a specific timing bounds (these are often in the micro- and nanosecond
+range), and upon failure to do so proceed with undefined behavior instead of
+printing a (hopefully) informative error message or throwing a well-defined
+exception.
+
+Debugging on the other hand is complicated by the fact that programs are executed
+not on the development host, but on a separate piece of hardware.
+Debugging options include using \lstinline|printf| to output text
+over a \ac{UART} interface, or toggling \acp{LED} at specific points of interest
+within the program.
+While debuggers may be used by connecting a \ac{JTAG} device such as the Atmel
+JTAGICE mkII,
+these are often expensive\footnote{
+%
+And specifically, not available to students in the \ac{TU} Vienna Microcontroller course.
+%
+}.
+
+The answer to these problems lies in simulation. Binary \ac{ELF} files can be
+interpreted by a simulator to mimic the state and actions of an \ac{AVR} controller
+loaded with the same \ac{ELF} firmware file. This program can not only run on the development
+host, but also implement sophisticated development aids such as debugging support
+using standard tools, producing execution and signal traces, and replaying recorded
+signal sequences. Simulation simplifies development of \ac{AVR} programmers and improves
+the quality of produced artifacts while simultaneously lower the entry barrier
+for new programmers by allowing them to debug without acquiring expensive
+hardware (or even doing initial development without posessing a hardware microcontroller
+at all). Unit testing and regression checks can be created that run automatically
+on the development machine, and environments may be simulated by recording and then
+replaying signal sequences at will.
+
+The aim of this thesis is to produce such a tool for \ac{AVR} microntrollers,
+specifically the \verb|atmega1280| processor running on a frequency of 16 \ac{MHz}
+on a MikroElektronika BIGAVR6 Development System\footnote{
+%
+\url{http://www.mikroe.com/bigavr/}, accessed 2012-09-01.
+%
+}, based on the \ac{AVR} core simulation provided by \simavr\footnote{
+%
+\url{https://github.com/buserror-uk/simavr}, accessed 2012-09-01.
+%
+}. External periphery of the BIGAVR6 board will also be simulated, including
+the \ac{LCD} and \ac{GLCD} displays, the \ac{TWI} \ac{EEPROM} and \ac{RTC},
+on-board \acp{LED} and push buttons connected to the \ac{IO} ports, a touchscreen
+attached to the \ac{GLCD}, and a temperature sensor using the 1-wire protocol.
+
+This document is structured as follows: Chapter \ref{chapter:introduction} briefly
+introduces the topic of this work and its objectives.
+
+% TODO: Concepts?
+
+Chapter \ref{chapter:relatedwork} summarizes the current state of related \ac{AVR}
+simulation software.
+
+The internals of \simavr are examined in-depth in chapter \ref{chapter:simavr}.
+
+Chapter \ref{chapter:designapproach} discusses the project requirements, and
+how the chosen design approach will achieve these as well as important decisions
+made during the development process.
+
+Chapter \ref{chapter:implementation} walks through the implementation of the
+\qsimavr core as well as the provided components.
+
+Results and potential for further work are presented in chapter \ref{chapter:results}.
+
+Appendix \ref{chapter:setup} provides a setup guide for getting up and running
+with both \simavr and \qsimavr.
+
+Finally, appendix \ref{chapter:user_guide} contains a \qsimavr user guide
+and brief tutorial for debugging \ac{AVR} programs with \qsimavr and \ac{GDB}.
