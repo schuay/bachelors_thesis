@@ -4,4 +4,23 @@
 
 \chapter{Conclusion} \label{chapter:conclusion}
 
-% TODO
+\qsimavr fills a gap in the open source ecosystem of \ac{AVR} utilities by
+providing a simple way of simulating \ac{AVR} microcontrollers including
+external periphery. The application is simple to use, and full documentation is
+provided for \qsimavr and \simavr internals.
+
+Components are implemented using a plugin architecture with a well documented
+interface and numerous examples, allowing for easy extensibility by interested parties.
+All components can include graphical output and accept input
+from the user.
+
+Furthermore, \ac{VCD} trace files can be produced during execution
+which substantially aids development and debugging of hardware drivers.
+
+\ac{GDB} debugging is also supported through the use of the \ac{GDB} Remote Serial
+Protocol, allowing developers to use established debugging tools they are already
+familiar with.
+
+\qsimavr provides simulation for eight components that should cover
+all base use cases of the BIGAVR6 board. If required, further components such
+as external Bluetooth and Ethernet modules could be implemented as follow-up projects.
