@@ -19,13 +19,66 @@ fully functional using the simulator. [...] With the debuggers connected, Atmel
 Studio 6 can present the status of the processor, memories and all communication
 and analog interfaces in views that are easy to understand, giving you fast
 access to critical system parameters.`` \cite{atmel} However, \emph{Atmel Studio}
-is only available on the Windows operating system. Also, it does not supports
-simulation of external components such as \ac{LCD} displays.
+is only available on the Windows operating system.
 
 \emph{simulavr}\footnote{
 %
 \url{http://www.nongnu.org/simulavr/}, accessed 2012-08-31.
 %
-} is an open source simulator for \ac{AVR} microcontrollers.
+} is an open source simulator for \ac{AVR} microcontrollers. It is written in
+C++ and provides a feature set very similar to \simavr itself, including \ac{ELF}
+file loading, \ac{VCD} traces, \ac{GDB} support, and execution traces.
+Additionally, it includes bindings for Tcl/Tk and Python which can be used for
+simple frontend additions and writing automated unit tests. \emph{simulavr}
+also offers execution traces including all debugging information present
+in the \ac{ELF} file:
 
-% TODO
+\begin{verbatim}
+fred.elf 0x0038: __do_copy_data+0x9 CPI R26, 0xb8 SREG=[------Z-]
+fred.elf 0x003a: __do_copy_data+0xa CPC R27, R17 SREG=[------Z-]
+fred.elf 0x003c: __SP_L__           BRNE ->0xfff4 main+0xf
+fred.elf 0x003e: __SP_H__,__SREG__  RCALL 5a SP=0x25e 0x20
+                                    SP=0x25d 0x0
+fred.elf 0x003e: __SP_H__,__SREG__  CPU-waitstate
+fred.elf 0x003e: __SP_H__,__SREG__  CPU-waitstate
+fred.elf 0x005a: main               PUSH R28 SP=0x25c 0x5f
+fred.elf 0x005a: main               CPU-waitstate
+fred.elf 0x005c: main+0x1           PUSH R29 SP=0x25b 0x2
+fred.elf 0x005c: main+0x1           CPU-waitstate
+\end{verbatim}
+
+Unfortunately, there are still only few \ac{AVR} cores supported by \emph{simulavr}\footnote{
+%
+18 devices are supported in version 1.0.
+%
+}; unfortunately the \verb|atmega1280| is not one of them, making \emph{simulavr}
+initially useless for our purposes. This may be because writing core definitions
+seems to be a more difficult task in \emph{simulavr} than \simavr, requiring
+knowledge of C++ and \emph{simulavr} internals.
+Development seems to have been stagnant for a while, version 1.0 was
+released only a few months ago in February 2012.
+
+Several other projects simulating external devices on top of an \ac{AVR} core
+simulation also exist. While researching for this chapter, we stumbled upon
+an application called \emph{HAPSIM}\footnote{
+%
+Or, Helmi's \ac{AVR} Periphery Simulator. \url{http://www.helmix.at/hapsim/}, accessed 2012-09-01.
+%
+}, which not only includes much of the same simulated components but also
+seems to have made the same design decisions as \qsimavr regarding its interface.
+\emph{HAPSIM} can simulate a HD44780U LCD display, push buttons and \acp{LED}
+connected to \ac{IO} ports, a \ac{UART} terminal, and a 4x4 matrix keypad.
+\emph{HAPSIM} requires Atmel AVR Studio 4, and as such is only available for
+Microsoft Windows.
+
+The author of \simavr has also written a full simulation of a RepRap\footnote{
+%
+''Humanity's first general-purpose self-replication manufacturing machine.``
+\url{http://www.reprap.org/wiki/RepRap}, accessed 2012-09-01.
+%
+} 3D printer called \emph{simreprap}\footnote{
+%
+\url{https://github.com/buserror-uk/simreprap}, accessed 2012-09-01.
+%
+}. It is based on \simavr (in fact it started out as a \simavr example),
+and renders output to OpenGl.
