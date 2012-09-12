@@ -4,20 +4,21 @@
 
 \chapter{Introduction} \label{chapter:introduction}
 
-Developing complex applications is an extremely difficult task, even more so when
+Developing complex applications can be an extremely difficult task, even more so when
 the targeted platform is as close to the hardware as microcontrollers. Unlike
-typical computer programs, programming for a microcontroller is done at a very level,
+typical computer programs, programming for a microcontroller is done at a very low level,
 requiring knowledge of the exact hardware specifications and using strict protocols
 to correctly communicate with external periphery. These protocols often require
-sending signals a specific timing bounds (these are often in the micro- and nanosecond
+sending signals with specific timing bounds (these are often in the micro- and nanosecond
 range), and upon failure to do so proceed with undefined behavior instead of
 printing a (hopefully) informative error message or throwing a well-defined
 exception.
 
 Debugging on the other hand is complicated by the fact that programs are executed
 not on the development host, but on a separate piece of hardware.
-Debugging options include using \lstinline|printf| to output text
-over a \ac{UART} interface, or toggling \acp{LED} at specific points of interest
+There are several options available to developers: for example, one could
+use \lstinline|printf| to output text
+over a \ac{UART} interface, or toggle \acp{LED} at specific points of interest
 within the program.
 While debuggers may be used by connecting a \ac{JTAG} device such as the Atmel
 JTAGICE mkII,
@@ -25,17 +26,17 @@ these are often expensive\footnote{
 %
 And specifically, not available to students in the \ac{TU} Vienna Microcontroller course.
 %
-}.
+} and can introduce side effects of their own.
 
 The answer to these problems lies in simulation. Binary \ac{ELF} files can be
 interpreted by a simulator to mimic the state and actions of an \ac{AVR} controller
-loaded with the same \ac{ELF} firmware file. This program can not only run on the development
+executing an \ac{ELF} firmware file. This program can not only run directly on the development
 host, but also implement sophisticated development aids such as debugging support
 using standard tools, producing execution and signal traces, and replaying recorded
 signal sequences. Simulation simplifies development of \ac{AVR} programmers and improves
-the quality of produced artifacts while simultaneously lower the entry barrier
+the quality of produced artifacts while simultaneously lowering the entry barrier
 for new programmers by allowing them to debug without acquiring expensive
-hardware (or even doing initial development without posessing a hardware microcontroller
+hardware (or even doing initial development without possessing a hardware microcontroller
 at all). Unit testing and regression checks can be created that run automatically
 on the development machine, and environments may be simulated by recording and then
 replaying signal sequences at will.

@@ -7,6 +7,8 @@
 Besides \simavr, there are currently several other \ac{AVR} simulator
 applications available.
 
+\section{Atmel Studio}
+
 Atmel's \ac{AVR} \ac{IDE}, \emph{Atmel Studio}\footnote{
 %
 \url{http://www.atmel.com/microsite/atmel_studio6/default.aspx}, accessed 2012-08-31.
@@ -20,6 +22,8 @@ Studio 6 can present the status of the processor, memories and all communication
 and analog interfaces in views that are easy to understand, giving you fast
 access to critical system parameters.`` \cite{atmel} However, \emph{Atmel Studio}
 is only available on the Windows operating system.
+
+\section{simulavr}
 
 \emph{simulavr}\footnote{
 %
@@ -51,12 +55,14 @@ Unfortunately, there are still only few \ac{AVR} cores supported by \emph{simula
 %
 18 devices are supported in version 1.0.
 %
-}; unfortunately the \verb|atmega1280| is not one of them, making \emph{simulavr}
+}; the \verb|atmega1280| is not one of them, making \emph{simulavr}
 initially useless for our purposes. This may be because writing core definitions
 seems to be a more difficult task in \emph{simulavr} than \simavr, requiring
 knowledge of C++ and \emph{simulavr} internals.
-Development seems to have been stagnant for a while, version 1.0 was
+Although development appeared to be stagnating for a while, version 1.0 has been
 released only a few months ago in February 2012.
+
+\section{Other \ac{AVR} Simulators}
 
 Several other projects simulating external devices on top of an \ac{AVR} core
 simulation also exist. While researching for this chapter, we stumbled upon

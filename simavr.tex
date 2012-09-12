@@ -22,7 +22,7 @@ platform with avr-libc support.
 
 In the following sections, we will take a tour through \simavr internals\footnote{
 Most, if not all of the code examined in this chapter is taken directly from \simavr.}.
-Without further delay, let's jump right in and walk through a short demo.
+We will begin by examining short (but complete) demonstration application.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -57,11 +57,11 @@ avr_vcd_t vcd_file;
 i2c_eeprom_t ee;
 \end{lstlisting}
 
-avr is the main data structure. It encapsulates the entire state of the
+\lstinline|avr| is the main data structure. It encapsulates the entire state of the
 core simulation, including register, \ac{SRAM} and flash contents, the \ac{CPU} state, the
 current cycle count, callbacks for various tasks, pending interrupts, and more.
 
-\lstinline|vcd_file| represents the file target for the \emph{value change dump} module. It
+\lstinline|vcd_file| represents the file target for the \ac{VCD} module. It
 is used to dump the level changes of desired pins (or \acp{IRQ} in general) into a
 file which can be subsequently viewed using utilities such as \emph{gtkwave}.
 
@@ -252,7 +252,7 @@ breakpoint or the end of a step and stops the \ac{CPU} if it did.
 
 If \ac{GDB} has transmitted a step command, we need to save the state during the
 main section of the loop (the \ac{CPU} ``runs'' for one instruction) and restore to
-the ``StepDone'' state at on completion.
+the \lstinline|StepDone| state at on completion.
 
 \begin{lstlisting}
     avr_flashaddr_t new_pc = avr->pc;
@@ -357,8 +357,8 @@ ready to be used by the main loop as discussed in section \ref{section:mainloop}
 includes settings such as memory sizes, register locations, available components,
 the default \ac{CPU} frequency, etc \ldots
 
-The \ac{MCU} definitions are located in the simavr/cores subdirectory of the \simavr
-source tree and are compiled conditionally depending on the the local avr-libc
+The \ac{MCU} definitions are located in the \verb|simavr/cores| subdirectory of the \simavr
+source tree and are compiled conditionally depending on the the local \emph{avr-libc}
 support. A complete list of locally supported cores is printed by running \simavr
 without any arguments.
 
@@ -676,7 +676,7 @@ Given a situation in which the next scheduled timer is many cycles in the future
 and the \ac{CPU} is currently sleeping, the simulation will become extremely
 unresponsive to external events.
 
-However, in real applications this situation is very unprobable, since
+However, in real applications this situation is very unlikely, since
 manual events (which cannot be scheduled through cycle timers) occur very rarely,
 and most applications will have at least some cycle timers with a short period.
 
@@ -759,7 +759,7 @@ for a data access, execution is halted, and a status report is sent to \ac{GDB}.
 Finally, since program crashes often occur unexpectedly, \simavr helpfully
 provides \ac{GDB} passive mode, which
 opens a \ac{GDB} listening socket whenever an exception occurs if the \ac{GDB}
-port is specified. It is always a good idea to initialize \lstinline|avr->gdb_port| even
+port is specified. It is therefore always a good idea to initialize \lstinline|avr->gdb_port|, even
 if you have no intention of using \simavr's \ac{GDB} features!
 
 
