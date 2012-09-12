@@ -176,7 +176,7 @@ typedef Factory<Component> ComponentFactory;
 \end{lstlisting}
 
 The factory is a generic class which simply provides a pure abstract \lstinline|create| function
-to create, initialize and return an object. In \qsimavr, we only use the instatiated
+to create, initialize and return an object. In \qsimavr, we only use the instantiated
 version \lstinline|ComponentFactory|, which returns a \lstinline|Component|.
 
 \lstinline|Q_DISABLE_COPY| prevents copying a class by declaring the copy and
@@ -647,7 +647,7 @@ Pin/\ac{IRQ}        & Function \\
 Each \lstinline|QPushButton| also doubles as a \ac{LED} by changing its background
 color to represent \ac{LED} state. The implementation assumes that pull-ups
 are enabled on all ports, and pulls pins to high when a button is released.
-The implementation is otherwise farily trivial and there is not much of interest
+The implementation is otherwise fairly trivial and there is not much of interest
 to be mentioned.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -746,7 +746,7 @@ displays the memory in an editable hex editor widget\footnote{
 The used widget is QHexEdit2 by Winfried Simon. The source code is available
 at \url{http://code.google.com/p/qhexedit2/}.
 %
-}. If the user changes memory areas, these are in turn signalled to the
+}. If the user changes memory areas, these are in turn signaled to the
 \lstinline|DS1820| class, which updates the corresponding memory areas.
 
 Triggering a temperature conversion in this implementation does nothing, since the
