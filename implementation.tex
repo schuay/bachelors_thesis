@@ -819,5 +819,10 @@ A situation in which the \ac{IO} port \ac{IRQ} would miss level changes was fixe
 removing manual filtering and relying instead on the \lstinline|IRQ_FLAG_FILTERED|
 behavior.
 
+Larger \acp{AVR} now correctly use the \lstinline|EICRB| register for external
+interrupts 4 to 7.
+
+\ac{GDB} deinitializes itself during \lstinline|avr_terminate|. This is relevant when running multiple simavr sessions in a single program to avoid memory leaks and correct socket operation.
+
 Finally, \lstinline|IO| port \acp{IRQ} now restore themselves to PORT
 the register value when \ac{DDR} is switched to output mode.
