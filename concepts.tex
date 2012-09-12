@@ -4,4 +4,54 @@
 
 \chapter{Concepts} \label{chapter:concepts}
 
-% TODO
+Simulation is the imitation of a real-world process or system over time\cite{wiki:simulation}.
+There are numerous variations of this concept, including simulation for training purposes
+(such as aircraft simulators), simulation of natural phenomenons for scientific study
+or for creating forecast (like weather systems), and simulation simply for entertainment purposes
+as can be found most prominently in computer games.
+
+This thesis concerns itself with yet another kind of simulation, which imitates
+the operation of a microcontroller and attached peripherals on common desktop computer architectures. More
+specifically, \simavr simulates the family of 8-bit \ac{AVR} microcontroller systems
+on any modern system supported by \emph{avr-libc}.
+
+In this case, simulation simplifies both the development and debugging of \ac{AVR}
+programs by making software engineering staples such as automatic unit tests possible
+and vastly easing access to debugging methods and tools such as \ac{GDB} without further
+required hardware.
+
+Emulation is another related concept which is only indistinctly different from
+simulation. Originally, emulation was first used in 1963 to refer to a type
+of simulation which consisted of mixing hardware microcode and software components
+to achieve faster simulation speed\cite{building_ibm}. However, this definition is now
+largely obsolete. The current concensus seems to be that emulation focuses on imitating
+the tangible effects of a system, while simulation concerns itself especially with
+a system's inner state.
+
+In this context, \simavr can be considered to be a cross between a simulator and
+emulator; it tries to both maintain approximately realistic execution times while
+producing identical execution results as when running on an \ac{AVR} \ac{MCU} as
+well as maintaining and accurate internal state at all times.
+
+Emulators usually consist of a \ac{CPU} and memory subsystems which interact with
+\ac{IO} device simulations\cite{wiki:emulation}.
+
+The \ac{CPU} subsystem is responsible
+for imitating the state and operation of a processor. Specifically, essential components of an \ac{AVR}
+processor are simulation of the \ac{SREG} and instruction decoding/processing.
+During each simulation cycle, the subsystem decodes an instruction from program memory
+and subsequently ``executes'' it by performing semantically equivalent operations on
+the host \ac{CPU}. Finally, the \ac{SREG} is updated accordingly.
+
+The memory subsystem not only keeps track of memory contents, but also limits access
+to the available memory space, and handles \ac{IO} mapped registers which
+trigger interactions with some \ac{IO} device when read or written.
+
+Finally, \ac{IO} devices may be connected to the core subsystems and be programmed
+to respond to (and emit) signals.
+
+\simavr already contains the \ac{CPU} and memory subsystems, as well as some
+\ac{IO} devices closely associated with \ac{AVR} \acp{MCU} such as an internal \ac{EEPROM},
+\acp{ADC}, \ac{IO} ports, timers, and more. \qsimavr will extend upon this existing functionality to
+implement several further \ac{IO} modules which interact seamlessly with \simavr, while also offering a
+graphical user interface to control the simulation.
