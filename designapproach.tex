@@ -62,14 +62,14 @@ robust.
 
 Qt\footnote{
 %
-\url{http://qt.nokia.com/products} (Qt is currently in the process of begin sold
+\url{http://qt.nokia.com/products} (Qt is currently in the process of being sold
 to Digia, don't expect this link to stay valid for long.)
 %
 } was used as the \ac{GUI} toolkit. It is widely used, distributed and installed
 by default on most Linux systems. Qt also has great cross-platform compatibility,
 and as such \qsimavr should be very simple to port to any other platform that
 is supported by both \simavr and Qt. The signal and slot paradigm employed by
-Qt is very well suited to \ac{GUI} programming, and the
+Qt is well suited to \ac{GUI} programming, and the
 QGraphicsScene/QGraphicsView classes are very pleasant to use for more advanced
 drawing and \ac{IO} tasks. Finally, QtCreator\footnote{
 %
@@ -99,7 +99,7 @@ namely, C code with graphical components relying on Freeglut\footnote{
 %
 }, a thin layer on top of OpenGl. However, it was clear from the start that
 standard (and not-so-standard) elements such as menus, toolbars, and \ac{MDI}
-windows would needed. These widgets are provided out of the box by Qt, and
+windows would be needed. These widgets are provided out of the box by Qt, and
 would have taken an infeasable amount of time with a low level library such as
 Freeglut. While the original plan was to write the \qsimavr core in C++ but keep
 components in C, it turned out to feel more natural to implement entirely in C++.

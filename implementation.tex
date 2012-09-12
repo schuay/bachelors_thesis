@@ -22,7 +22,7 @@ tree. Its responsibilities include handling the routine tasks of the main window
 dialogs when loading firmware, etc \ldots), loading and subsequently managing
 plugins, and actually running the \simavr main loop.
 
-In the following sections, we will discuss the interesting parts of the
+In the following sections, we will discuss the most interesting parts of the
 \lstinline|SimAVR| and \lstinline|PluginManager| classes. Interested readers
 should consult the source code for complete implementation details.
 
@@ -195,7 +195,7 @@ It is particularly important to realize that these must use queued signal
 delivery, since the logic and \ac{GUI} parts do not reside in the same thread.
 Specify \lstinline|Qt::QueuedConnection| in \lstinline|QObject::connect()|.
 %
-} and packs them into a \lstinline|Component|, which is simply a struct containing
+} and packs them into a \lstinline|Component|, which is simply a \lstinline|struct| containing
 smart pointers to the component parts:
 
 \begin{lstlisting}
@@ -605,7 +605,7 @@ Pin/\ac{IRQ}        & Function \\
 \label{tab:wiring_lcd}
 \end{table}
 
-Communication is very similar to the \ac{GLCD} exmined in section
+Communication is very similar to the \ac{GLCD} examined in section
 \ref{section:component_glcd} and will not be discussed further in this section.
 Font selection, custom fonts and cursor display are not implemented, allowing us to use
 a simple \lstinline|QTextBrowser| to display \ac{LCD} output.
