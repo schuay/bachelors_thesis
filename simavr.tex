@@ -254,6 +254,27 @@ If \ac{GDB} has transmitted a step command, we need to save the state during the
 main section of the loop (the \ac{CPU} ``runs'' for one instruction) and restore to
 the \lstinline|StepDone| state at on completion.
 
+In total, there are eight different states the \ac{CPU} can enter:
+
+\begin{lstlisting}
+enum {
+    cpu_Limbo = 0,
+    cpu_Stopped,
+    cpu_Running,
+    cpu_Sleeping,
+    cpu_Step,
+    cpu_StepDone,
+    cpu_Done,
+    cpu_Crashed,
+};
+\end{lstlisting}
+
+A CPU is \lstinline|Running| during normal execution. \lstinline|Stopped| occurs for example
+when hitting a \ac{GDB} breakpoint. \lstinline|Sleeping| is entered whenever the \lstinline|SLEEP|
+instruction is processed. As mentioned, \lstinline|Step| and \lstinline|StepDone|
+are related to the \ac{GDB} stepping process. Execution can terminate either with \lstinline|Done|
+or \lstinline|Crashed| on error. Upon initialization, the \ac{CPU} is in the \lstinline|Limbo| state.
+
 \begin{lstlisting}
     avr_flashaddr_t new_pc = avr->pc;
 
@@ -420,7 +441,7 @@ AVR_MCU_SIMAVR_COMMAND(&GPIOR0);
 
 int main() {
     /* [...] */
-    GPIOR0 = SIMAVR_CMD_\ac{VCD}_START_TRACE;
+    GPIOR0 = SIMAVR_CMD_VCD_START_TRACE;
     /* [...] */
 }
 \end{lstlisting}
@@ -476,7 +497,7 @@ Similar to the program counter, the spent cycles are set to a default value of 1
 The instruction and its operands are then extracted from the opcode and processed
 in a large switch statement. The instructions themselves can be roughly categorized
 into arithmetic and logic instructions, branch instructions, data transfer
-instructions, bit and bit-test instructions and \ac{MCU} control instructions.
+instructions, bit and bit-test instructions, and \ac{MCU} control instructions.
 
 Processing these will involve a number of typical tasks:
 
