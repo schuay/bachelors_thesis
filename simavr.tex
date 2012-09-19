@@ -569,7 +569,9 @@ and \lstinline|raised| specify the \ac{IO} register index for, respectively, the
 interrupt enable flag and the interrupt raised bit (again taking \lstinline|INT0|
 as an example, enable would point to the \lstinline|INT0| bit in \lstinline|EIMSK|,
 and raised to \lstinline|INTF0| in \lstinline|EIFR|. \lstinline|irq| is raised to
-1 when the interrupt is triggered, and to 0 when it is serviced.
+1 when the interrupt is triggered, and to 0 when it is serviced. \lstinline|pending| equals
+1 whenever the interrupt is queued for servicing, and \lstinline|trace| is used
+for debugging purposes.
 
 Usually, raised flags are cleared automatically upon interrupt servicing. However,
 this does not count for all interrupts(notably, \lstinline|TWINT|).
