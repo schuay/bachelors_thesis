@@ -335,7 +335,7 @@ which defines a C function returning a factory instance:
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{TWI} Component} \label{section:component_twi}
+\section{\acs{TWI} Component} \label{section:component_twi}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We now turn our attention to the actual component implementations. The \ac{TWI}
@@ -386,7 +386,7 @@ has been sent.
 completes, and allows the slave to react to a transmission.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{EEPROM} Component} \label{section:component_eeprom}
+\section{\acs{EEPROM} Component} \label{section:component_eeprom}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \ac{EEPROM} uses the \ac{TWI} component briefly described in section \ref{section:component_twi}.
@@ -448,7 +448,7 @@ of raw memory arrays through \lstinline|QByteArray::data|.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{RTC} Component} \label{section:component_rtc}
+\section{\acs{RTC} Component} \label{section:component_rtc}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \ac{RTC} component consists of a 56 byte memory area\footnote{
@@ -491,7 +491,7 @@ and time bytes. Handling of leap years is simplified by relying on Qt's
 The square wave pin of the actual component is \emph{not} implemented.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{GLCD} Component} \label{section:component_glcd}
+\section{\acs{GLCD} Component} \label{section:component_glcd}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \ac{GLCD} component simulates a 128x64 Graphic \ac{LCD} display, based internally
@@ -579,7 +579,7 @@ the coordinates are reset to the neutral lower-left corner.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acf{LCD} Component} \label{section:component_lcd}
+\section{\acs{LCD} Component} \label{section:component_lcd}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This component simulates a 2x16 \ac{LCD} display based on the HD44780
@@ -611,7 +611,7 @@ Font selection, custom fonts and cursor display are not implemented, allowing us
 a simple \lstinline|QTextBrowser| to display \ac{LCD} output.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{\acfp{LED} \& Buttons Component}
+\section{\acsp{LED} \& Buttons Component}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The 86 buttons and \acp{LED} of the BIGAVR6 board are bundled into this simple
