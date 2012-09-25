@@ -3,11 +3,9 @@ PROJECT = thesis
 #------------------------------------------------------------------------------
 protocol:
 #------------------------------------------------------------------------------
-	latex $(PROJECT)
+	pdflatex $(PROJECT)
 	bibtex $(PROJECT)
-	latex $(PROJECT)
-	dvips -o $(PROJECT).ps $(PROJECT).dvi
-	ps2pdf $(PROJECT).ps $(PROJECT).pdf
+	pdflatex $(PROJECT)
 
 
 #------------------------------------------------------------------------------
