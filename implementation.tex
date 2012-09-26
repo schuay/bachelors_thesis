@@ -112,7 +112,7 @@ The plugin manager
 \item Manages their connections to \lstinline|avr_t| instances as plugins are
       enabled or disabled and simulation is restarted or loaded with a new firmware
       file,
-\item Turns \ac{VCD} tracing on depending on the selections made in component
+\item Turns on \ac{VCD} tracing depending on the selections made in component
       settings, and
 \item Saves and restores component settings.
 \end{itemize}
@@ -645,8 +645,8 @@ Pin/\ac{IRQ}        & Function \\
 \end{table}
 
 Each \lstinline|QPushButton| also doubles as a \ac{LED} by changing its background
-color to represent \ac{LED} state. The implementation assumes that pull-ups
-are enabled on all ports, and pulls pins to high when a button is released.
+color to represent \ac{LED} state. When a button is pressed, the pin is pulled low.
+We assumee that pull-ups are enabled on all ports, and therefore pull pins to high when a button is released.
 The implementation is otherwise fairly trivial and there is not much of interest
 to be mentioned.
 
