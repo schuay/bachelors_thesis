@@ -575,7 +575,9 @@ core by querying \ac{ADC}0 and \ac{ADC}1, which are respectively responsible
 for the X and Y axis. An \ac{ADC} value of 2700 millivolts corresponds approximately
 to the upper and right edges of the screen. The voltages scale linearly until
 reaching 0 volts at the lower and left edges. If no ``touch'' is currently active,
-the coordinates are reset to the neutral lower-left corner.
+the coordinates are reset to the neutral lower-left corner. Touchscreen pins
+only return meaningful values if its drive pins are set correctly, otherwise a default
+of zero millivolts is returned and a warning is printed to \lstinline|stderr|.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
