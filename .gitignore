@@ -5,7 +5,6 @@
 *.dvi
 *.log
 *.out
-*.pdf
 *.ps
 *.swp
 *.toc
