@@ -6,6 +6,7 @@ protocol:
 	pdflatex $(PROJECT)
 	bibtex $(PROJECT)
 	pdflatex $(PROJECT)
+	pdflatex $(PROJECT)
 
 
 #------------------------------------------------------------------------------
